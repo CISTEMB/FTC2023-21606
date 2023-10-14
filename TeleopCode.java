@@ -52,10 +52,10 @@ public class TeleopCode extends OpMode
     // }
     
     // Declare controller related variables(prev button presses, etc.) {
-    private float turn_joy = 0;
-    private float drive_joy = 0;
+    private double turn_joy = 0;
+    private double drive_joy = 0;
     
-    private float strafe_joy = 0;
+    private double strafe_joy = 0;
     // }
     
     // Declare general global variables {
@@ -77,6 +77,16 @@ public class TeleopCode extends OpMode
     private DriveState CurrentDriveState;
     private boolean InitDriveState = false;
     private ElapsedTime DriveStateTime = new ElapsedTime();
+    
+    private static double TURN_SENSITIVITY = 0.5;
+    private static double DRIVE_SENSITIVITY = 0.5;
+    private static double STRAFE_SENSITIVITY = 0.5;
+    private static double MAX_MOTOR_POWER = 1;
+    
+    private double leftFrontPower;
+    private double rightFrontPower;
+    private double leftBackPower;
+    private double rightBackPower;
     // }
     
     // }
@@ -85,7 +95,6 @@ public class TeleopCode extends OpMode
      */
     @Override
     public void init() {
-        telemetry.addData("Status", "Initialized");
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
@@ -102,6 +111,16 @@ public class TeleopCode extends OpMode
         rf_motor.setDirection(DcMotor.Direction.FORWARD);
         lb_motor.setDirection(DcMotor.Direction.FORWARD);
         rb_motor.setDirection(DcMotor.Direction.REVERSE);
+        
+        lf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        
+        lf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -131,37 +150,72 @@ public class TeleopCode extends OpMode
      */
     @Override
     public void loop() {
-        // Setup a variable for each drive wheel to save power level for telemetry
-        double leftPower;
-        double rightPower;
-
-        // Choose to drive using either Tank Mode, or POV Mode
-        // Comment out the method that's not used.  The default below is POV.
-
-        // POV Mode uses left stick to go forward, and right stick to turn.
-        // - This uses basic math to combine motions and is easier to drive straight.
-        double drive = -gamepad1.left_stick_y;
-        double turn  =  gamepad1.right_stick_x;
-        leftPower    = Range.clip(drive + turn, -.5, .5) ;
-        rightPower   = Range.clip(drive - turn, -.5, .5) ;
+        // Read controllers {
+        drive_joy = -gamepad1.left_stick_y;
+        turn_joy  =  gamepad1.left_stick_x;
+        strafe_joy = gamepad1.right_stick_x;
+        telemetry.addData("Joysticks", "drive (%.2f), turn (%.2f), strafe (%.2f)", drive_joy, turn_joy, strafe_joy);
+        // }
         
-
-        // Tank Mode uses one stick to control each wheel.
-        // - This requires no math, but it is hard to drive forward slowly and keep straight.
-        // leftPower  = -gamepad1.left_stick_y ;
-        // rightPower = -gamepad1.right_stick_y ;
-
-        // Send calculated power to wheels
-        /*leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);*/
-        lf_motor.setPower(leftPower);
-        rf_motor.setPower(rightPower);
-        lb_motor.setPower(leftPower);
-        rb_motor.setPower(rightPower);
+        switch (CurrentDriveState)
+        {
+            case DRIVE_STATE_INIT:
+                telemetry.addData("Drive state", "Init");
+                if (InitDriveState)
+                {
+                    lf_motor.setPower(0);
+                    rf_motor.setPower(0);
+                    lb_motor.setPower(0);
+                    rb_motor.setPower(0);
+                    
+                    InitDriveState = false;
+                } 
+                if (true) { // Because we not want to immedatly start
+                    newDriveState(DriveState.DRIVE_STATE_CONTROL);
+                }
+                break;
+                
+            case DRIVE_STATE_CONTROL:
+                telemetry.addData("Drive state", "Controlling");
+                if (InitDriveState)
+                {
+                    InitDriveState = false;
+                } else {
+                    // Calculate power {
+                    leftFrontPower = Range.clip((TURN_SENSITIVITY*turn_joy)+(DRIVE_SENSITIVITY*drive_joy)+(STRAFE_SENSITIVITY*strafe_joy),
+                                                -MAX_MOTOR_POWER,
+                                                MAX_MOTOR_POWER
+                    );
+                    rightFrontPower = Range.clip(-(TURN_SENSITIVITY*turn_joy)+(DRIVE_SENSITIVITY*drive_joy)-(STRAFE_SENSITIVITY*strafe_joy),
+                                                -MAX_MOTOR_POWER,
+                                                MAX_MOTOR_POWER
+                    );
+                    leftBackPower = Range.clip((TURN_SENSITIVITY*turn_joy)+(DRIVE_SENSITIVITY*drive_joy)-(STRAFE_SENSITIVITY*strafe_joy),
+                                                -MAX_MOTOR_POWER,
+                                                MAX_MOTOR_POWER
+                    );
+                    rightBackPower = Range.clip(-(TURN_SENSITIVITY*turn_joy)+(DRIVE_SENSITIVITY*drive_joy)+(STRAFE_SENSITIVITY*strafe_joy),
+                                                -MAX_MOTOR_POWER,
+                                                MAX_MOTOR_POWER
+                    );
+                    // }
+                    
+                    // Send calculated power to wheels {
+                    lf_motor.setPower(leftFrontPower);
+                    rf_motor.setPower(rightFrontPower);
+                    lb_motor.setPower(leftBackPower);
+                    rb_motor.setPower(rightBackPower);
+                    // }
+                    
+                    telemetry.addData("Motors", "lf (%.2f), rf (%.2f), lb (%.2f), rb (%.2f)", leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+                }
+                break;
+        }
+        
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
-        //telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+        telemetry.update();
     }
 
     /*
