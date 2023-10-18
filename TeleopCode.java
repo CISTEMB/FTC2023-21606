@@ -49,6 +49,8 @@ public class TeleopCode extends OpMode
     private DcMotor rf_motor = null;
     private DcMotor lb_motor = null;
     private DcMotor rb_motor = null;
+    private DcMotor elbow_motor = null;
+    
     // }
     
     // Declare controller related variables(prev button presses, etc.) {
@@ -65,6 +67,9 @@ public class TeleopCode extends OpMode
     // State machine enums/variables {
     
     // Declare arm state machine enums and variables {
+    private boolean pickup_pos_btn;
+    private boolean back_pos_btn;
+    private boolean tuck_pos_btn;
     // }
     
     // Declare drive state machine enums and variables {
@@ -77,10 +82,10 @@ public class TeleopCode extends OpMode
     private DriveState CurrentDriveState;
     private boolean InitDriveState = false;
     private ElapsedTime DriveStateTime = new ElapsedTime();
-    
+     
     private static double TURN_SENSITIVITY = 0.5;
-    private static double DRIVE_SENSITIVITY = 0.5;
-    private static double STRAFE_SENSITIVITY = 0.5;
+    private static double DRIVE_SENSITIVITY = 0.75;
+    private static double STRAFE_SENSITIVITY = 0.75;
     private static double MAX_MOTOR_POWER = 1;
     
     private double leftFrontPower;
@@ -103,6 +108,7 @@ public class TeleopCode extends OpMode
         rf_motor = hardwareMap.get(DcMotor.class, "RF_MOTOR");
         lb_motor = hardwareMap.get(DcMotor.class, "LB_MOTOR");
         rb_motor = hardwareMap.get(DcMotor.class, "RB_MOTOR");
+        elbow_motor = hardwareMap.get(DcMotor.class, "ELBOW_MOTOR");   
         
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -111,16 +117,21 @@ public class TeleopCode extends OpMode
         rf_motor.setDirection(DcMotor.Direction.FORWARD);
         lb_motor.setDirection(DcMotor.Direction.FORWARD);
         rb_motor.setDirection(DcMotor.Direction.REVERSE);
+        elbow_motor.setDirection(DcMotor.Direction.REVERSE);
         
         lf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elbow_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        
         
         lf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        elbow_motor.setTargetPosition(0);
+        elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -155,6 +166,12 @@ public class TeleopCode extends OpMode
         turn_joy  =  gamepad1.left_stick_x;
         strafe_joy = gamepad1.right_stick_x;
         telemetry.addData("Joysticks", "drive (%.2f), turn (%.2f), strafe (%.2f)", drive_joy, turn_joy, strafe_joy);
+        
+        pickup_pos_btn = gamepad2.y;
+        tuck_pos_btn = gamepad2.a;
+        back_pos_btn = gamepad2.b;
+        telemetry.addData("Pos Btns", "pu(y): " + pickup_pos_btn + ", tuck(a): " + tuck_pos_btn + ", back(b): " + back_pos_btn);
+        
         // }
         
         switch (CurrentDriveState)
