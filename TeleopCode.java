@@ -58,6 +58,13 @@ public class TeleopCode extends OpMode
     private double drive_joy = 0;
     
     private double strafe_joy = 0;
+    
+    private double elbow_joy = 0;
+    private double wrist_joy = 0;
+    
+    private boolean pickup_pos_btn;
+    private boolean back_pos_btn;
+    private boolean tuck_pos_btn;
     // }
     
     // Declare general global variables {
@@ -67,9 +74,18 @@ public class TeleopCode extends OpMode
     // State machine enums/variables {
     
     // Declare arm state machine enums and variables {
-    private boolean pickup_pos_btn;
-    private boolean back_pos_btn;
-    private boolean tuck_pos_btn;
+    private enum ArmState {
+        ARM_STATE_INIT,
+        ARM_STATE_MANUAL,
+        ARM_STATE_PICKUP,
+        ARM_STATE_END, // Might not need, there for structure's sake
+    };
+    
+    private ArmState CurrentArmState;
+    private boolean InitArmState = false;
+    private ElapsedTime ArmStateTime = new ElapsedTime();
+    
+    private static double ELBOW_SENSITIVITY = 0.5;
     // }
     
     // Declare drive state machine enums and variables {
@@ -138,6 +154,7 @@ public class TeleopCode extends OpMode
         
         // Initialize states for state machines {
         newDriveState(DriveState.DRIVE_STATE_INIT);
+        newArmState(ArmState.ARM_STATE_INIT);
         // }
     }
 
@@ -165,7 +182,11 @@ public class TeleopCode extends OpMode
         drive_joy = -gamepad1.left_stick_y;
         turn_joy  =  gamepad1.left_stick_x;
         strafe_joy = gamepad1.right_stick_x;
-        telemetry.addData("Joysticks", "drive (%.2f), turn (%.2f), strafe (%.2f)", drive_joy, turn_joy, strafe_joy);
+        telemetry.addData("Drive Joysticks", "drive (%.2f), turn (%.2f), strafe (%.2f)", drive_joy, turn_joy, strafe_joy);
+        
+        elbow_joy = gamepad2.left_stick_y;
+        wrist_joy = gamepad2.right_stick_y;
+        telemetry.addData("Arm Joysticks", "arm (%.2f), wrist (%.2f)", elbow_joy, wrist_joy);
         
         pickup_pos_btn = gamepad2.y;
         tuck_pos_btn = gamepad2.a;
@@ -173,6 +194,35 @@ public class TeleopCode extends OpMode
         telemetry.addData("Pos Btns", "pu(y): " + pickup_pos_btn + ", tuck(a): " + tuck_pos_btn + ", back(b): " + back_pos_btn);
         
         // }
+        
+        switch (CurrentArmState) {
+            case ARM_STATE_INIT:
+                telemetry.addData("Arm state", "Init");
+                if (InitArmState) {
+                    elbow_motor.setPower(0);
+                    
+                    InitArmState = false;
+                }
+                if (true) {
+                    newArmState(ArmState.ARM_STATE_PICKUP);
+                }
+                break;
+            case ARM_STATE_PICKUP:
+                telemetry.addData("Arm state", "Pickup");
+                if (InitArmState) {
+                    InitArmState = false; // Yes this has to be here because otherwise we'll overwrite the new value
+                    newArmState(ArmState.ARM_STATE_MANUAL); // Remove this when we have a actual pickup state
+                }
+                break;
+            case ARM_STATE_MANUAL:
+                telemetry.addData("Arm state", "Manual");
+                if (InitArmState) {
+                    elbow_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // TODO: Check if RUN_USING_ENCODER is correct or if we should use RUN_USING_ENCODERS
+                    InitArmState = false;
+                } else {
+                    elbow_motor.setPower(elbow_joy * ELBOW_SENSITIVITY);
+                }
+        }
         
         switch (CurrentDriveState)
         {
@@ -246,5 +296,10 @@ public class TeleopCode extends OpMode
         DriveStateTime.reset();
         CurrentDriveState = newState;
         InitDriveState = true;
+    }
+    private void newArmState(ArmState newState) {
+        ArmStateTime.reset();
+        CurrentArmState = newState;
+        InitArmState = true;
     }
 }
