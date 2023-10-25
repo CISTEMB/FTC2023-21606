@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -50,6 +51,7 @@ public class TeleopCode extends OpMode
     private DcMotor lb_motor = null;
     private DcMotor rb_motor = null;
     private DcMotor elbow_motor = null;
+    private Servo wrist_servo = null;
     
     // }
     
@@ -78,6 +80,7 @@ public class TeleopCode extends OpMode
         ARM_STATE_INIT,
         ARM_STATE_MANUAL,
         ARM_STATE_PICKUP,
+        ARM_STATE_HOLD,
         ARM_STATE_END, // Might not need, there for structure's sake
     };
     
@@ -85,6 +88,10 @@ public class TeleopCode extends OpMode
     private boolean InitArmState = false;
     private ElapsedTime ArmStateTime = new ElapsedTime();
     
+    private double wristPlace = 0.525;
+    private int elbowHold = 0;
+    
+    private static double WRIST_SENSITIVITY = 0.001;
     private static double ELBOW_SENSITIVITY = 0.5;
     // }
     
@@ -125,6 +132,7 @@ public class TeleopCode extends OpMode
         lb_motor = hardwareMap.get(DcMotor.class, "LB_MOTOR");
         rb_motor = hardwareMap.get(DcMotor.class, "RB_MOTOR");
         elbow_motor = hardwareMap.get(DcMotor.class, "ELBOW_MOTOR");   
+        wrist_servo = hardwareMap.get(Servo.class, "WRIST_SERVO");
         
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -148,6 +156,8 @@ public class TeleopCode extends OpMode
         rb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         elbow_motor.setTargetPosition(0);
         elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        
+        
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -219,9 +229,32 @@ public class TeleopCode extends OpMode
                 if (InitArmState) {
                     elbow_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // TODO: Check if RUN_USING_ENCODER is correct or if we should use RUN_USING_ENCODERS
                     InitArmState = false;
+                } else if (-0.01<elbow_joy && elbow_joy<0.01){
+                    elbowHold = elbow_motor.getCurrentPosition();
+                    newArmState(ArmState.ARM_STATE_HOLD);
                 } else {
                     elbow_motor.setPower(elbow_joy * ELBOW_SENSITIVITY);
+                    wristPlace += wrist_joy * WRIST_SENSITIVITY;
+                    wristPlace = Range.clip(wristPlace, 0, 1);
+                    wrist_servo.setPosition(wristPlace);
+                    telemetry.addData("Wrist location", wristPlace);
                 }
+                break;
+            case ARM_STATE_HOLD:
+                telemetry.addData("Arm state", "Hold");
+                if (InitArmState) {
+                    elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } else {
+                    elbow_motor.setTargetPosition(elbowHold);
+                    wristPlace += wrist_joy * WRIST_SENSITIVITY;
+                    wristPlace = Range.clip(wristPlace, 0, 1);
+                    wrist_servo.setPosition(wristPlace);
+                    telemetry.addData("Wrist location", wristPlace);
+                }
+                break;
         }
         
         switch (CurrentDriveState)
