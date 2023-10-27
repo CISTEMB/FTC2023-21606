@@ -37,6 +37,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import java.lang.Math.*;
+
 /*
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
@@ -52,6 +54,8 @@ public class TeleopCode extends OpMode
     private DcMotor rb_motor = null;
     private DcMotor elbow_motor = null;
     private Servo wrist_servo = null;
+    private Servo lg_servo = null; 
+    private Servo rg_servo = null;
     
     // }
     
@@ -67,6 +71,8 @@ public class TeleopCode extends OpMode
     private boolean pickup_pos_btn;
     private boolean back_pos_btn;
     private boolean tuck_pos_btn;
+    
+    private boolean grip_btn;
     // }
     
     // Declare general global variables {
@@ -81,6 +87,7 @@ public class TeleopCode extends OpMode
         ARM_STATE_MANUAL,
         ARM_STATE_PICKUP,
         ARM_STATE_HOLD,
+        ARM_STATE_ELBOW_HOLD,
         ARM_STATE_END, // Might not need, there for structure's sake
     };
     
@@ -133,6 +140,8 @@ public class TeleopCode extends OpMode
         rb_motor = hardwareMap.get(DcMotor.class, "RB_MOTOR");
         elbow_motor = hardwareMap.get(DcMotor.class, "ELBOW_MOTOR");   
         wrist_servo = hardwareMap.get(Servo.class, "WRIST_SERVO");
+        lg_servo = hardwareMap.get(Servo.class, "LG_SERVO");
+        rg_servo = hardwareMap.get(Servo.class, "RG_SERVO");
         
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -203,10 +212,17 @@ public class TeleopCode extends OpMode
         back_pos_btn = gamepad2.b;
         telemetry.addData("Pos Btns", "pu(y): " + pickup_pos_btn + ", tuck(a): " + tuck_pos_btn + ", back(b): " + back_pos_btn);
         
+        if (gamepad2.right_trigger > .5 || gamepad1.right_trigger > .5) {
+            grip_btn = true;
+        } else {
+            grip_btn = false;
+        }
+        telemetry.addData("Grip  Button", grip_btn);
+        
         // }
         
         switch (CurrentArmState) {
-            case ARM_STATE_INIT:
+            case ARM_STATE_INIT://{
                 telemetry.addData("Arm state", "Init");
                 if (InitArmState) {
                     elbow_motor.setPower(0);
@@ -216,14 +232,14 @@ public class TeleopCode extends OpMode
                 if (true) {
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 }
-                break;
-            case ARM_STATE_PICKUP:
+                break;//}
+            case ARM_STATE_PICKUP://{
                 telemetry.addData("Arm state", "Pickup");
                 if (InitArmState) {
                     InitArmState = false; // Yes this has to be here because otherwise we'll overwrite the new value
                     newArmState(ArmState.ARM_STATE_MANUAL); // Remove this when we have a actual pickup state
                 }
-                break;
+                break;//}
             case ARM_STATE_MANUAL:
                 telemetry.addData("Arm state", "Manual");
                 if (InitArmState) {
@@ -238,10 +254,12 @@ public class TeleopCode extends OpMode
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     wrist_servo.setPosition(wristPlace);
                     telemetry.addData("Wrist location", wristPlace);
+                    
+                    gripperControl(grip_btn);
                 }
                 break;
-            case ARM_STATE_HOLD:
-                telemetry.addData("Arm state", "Hold");
+            case ARM_STATE_ELBOW_HOLD://{
+                telemetry.addData("Arm state", "Elbow Hold");
                 if (InitArmState) {
                     elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
@@ -253,12 +271,13 @@ public class TeleopCode extends OpMode
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     wrist_servo.setPosition(wristPlace);
                     telemetry.addData("Wrist location", wristPlace);
+                    
+                    gripperControl(grip_btn);
                 }
-                break;
+                break;//}
         }
         
-        switch (CurrentDriveState)
-        {
+        switch (CurrentDriveState){
             case DRIVE_STATE_INIT:
                 telemetry.addData("Drive state", "Init");
                 if (InitDriveState)
@@ -330,9 +349,20 @@ public class TeleopCode extends OpMode
         CurrentDriveState = newState;
         InitDriveState = true;
     }
+    
     private void newArmState(ArmState newState) {
         ArmStateTime.reset();
         CurrentArmState = newState;
         InitArmState = true;
+    }
+    
+    private void gripperControl(boolean btn) {
+        if(btn) {
+            rg_servo.setPosition(1);
+            lg_servo.setPosition(1);
+        } else {
+            rg_servo.setPosition(0);
+            lg_servo.setPosition(0);
+        }
     }
 }
