@@ -37,8 +37,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import java.lang.Math.*;
-
 /*
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
@@ -87,6 +85,7 @@ public class TeleopCode extends OpMode
         ARM_STATE_MANUAL,
         ARM_STATE_PICKUP,
         ARM_STATE_HOLD,
+        ARM_STATE_TUCK,
         ARM_STATE_ELBOW_HOLD,
         ARM_STATE_END, // Might not need, there for structure's sake
     };
@@ -100,6 +99,11 @@ public class TeleopCode extends OpMode
     
     private static double WRIST_SENSITIVITY = 0.001;
     private static double ELBOW_SENSITIVITY = 0.5;
+    
+    // preset arm pos
+    private static double WRIST_PICKUP = .5;
+    private static int ELBOW_PICKUP = 10;
+    
     // }
     
     // Declare drive state machine enums and variables {
@@ -236,16 +240,37 @@ public class TeleopCode extends OpMode
             case ARM_STATE_PICKUP://{
                 telemetry.addData("Arm state", "Pickup");
                 if (InitArmState) {
-                    InitArmState = false; // Yes this has to be here because otherwise we'll overwrite the new value
-                    newArmState(ArmState.ARM_STATE_MANUAL); // Remove this when we have a actual pickup state
+                    elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                }
+                //if (tuck_pos_btn) {
+                    //newArmState(ArmState.ARM_STATE_TUCK);
+                //} else 
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } else {
+                    // elbow move 
+                    elbow_motor.setTargetPosition(ELBOW_PICKUP);
+                    // servo move
+                    wrist_servo.setPosition(WRIST_PICKUP);
+                    
+                    
+                    /*elbow_motor.setTargetPosition(elbowHold);
+                    wristPlace += wrist_joy * WRIST_SENSITIVITY;
+                    wristPlace = Range.clip(wristPlace, 0, 1);
+                    wrist_servo.setPosition(wristPlace);
+                    telemetry.addData("Wrist location", wristPlace);
+                    
+                    gripperControl(grip_btn);*/
                 }
                 break;//}
-            case ARM_STATE_MANUAL:
+            case ARM_STATE_MANUAL://{
                 telemetry.addData("Arm state", "Manual");
                 if (InitArmState) {
                     elbow_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // TODO: Check if RUN_USING_ENCODER is correct or if we should use RUN_USING_ENCODERS
                     InitArmState = false;
-                } else if (-0.01<elbow_joy && elbow_joy<0.01){
+                } 
+                if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_HOLD);
                 } else {
@@ -254,16 +279,18 @@ public class TeleopCode extends OpMode
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     wrist_servo.setPosition(wristPlace);
                     telemetry.addData("Wrist location", wristPlace);
+                    telemetry.addData("Elbow Location", elbow_motor.getCurrentPosition());
                     
                     gripperControl(grip_btn);
                 }
-                break;
+                break;//}
             case ARM_STATE_ELBOW_HOLD://{
                 telemetry.addData("Arm state", "Elbow Hold");
                 if (InitArmState) {
                     elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
-                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                }
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else {
                     elbow_motor.setTargetPosition(elbowHold);
@@ -271,11 +298,12 @@ public class TeleopCode extends OpMode
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     wrist_servo.setPosition(wristPlace);
                     telemetry.addData("Wrist location", wristPlace);
+                    telemetry.addData("Elbow Location", elbow_motor.getCurrentPosition());
                     
                     gripperControl(grip_btn);
                 }
                 break;//}
-        }
+         }
         
         switch (CurrentDriveState){
             case DRIVE_STATE_INIT:
