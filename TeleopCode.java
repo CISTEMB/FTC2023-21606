@@ -272,7 +272,7 @@ public class TeleopCode extends OpMode
                 } 
                 if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = elbow_motor.getCurrentPosition();
-                    newArmState(ArmState.ARM_STATE_HOLD);
+                    newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
                 } else {
                     elbow_motor.setPower(elbow_joy * ELBOW_SENSITIVITY);
                     wristPlace += wrist_joy * WRIST_SENSITIVITY;
