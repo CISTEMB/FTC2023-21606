@@ -96,6 +96,8 @@ public class TeleopCode extends OpMode
     
     private double wristPlace = 0.525;
     private int elbowHold = 0;
+    private double wristTuck = 1;
+    private int elbowTuck = -61;
     
     private static double WRIST_SENSITIVITY = 0.001;
     private static double ELBOW_SENSITIVITY = 0.5;
@@ -243,10 +245,9 @@ public class TeleopCode extends OpMode
                     elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
                 }
-                //if (tuck_pos_btn) {
-                    //newArmState(ArmState.ARM_STATE_TUCK);
-                //} else 
-                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                if (tuck_pos_btn) {
+                    newArmState(ArmState.ARM_STATE_TUCK);
+                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else {
                     // elbow move 
@@ -255,13 +256,13 @@ public class TeleopCode extends OpMode
                     wrist_servo.setPosition(WRIST_PICKUP);
                     
                     
-                    /*elbow_motor.setTargetPosition(elbowHold);
+                    elbow_motor.setTargetPosition(elbowHold);
                     wristPlace += wrist_joy * WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     wrist_servo.setPosition(wristPlace);
                     telemetry.addData("Wrist location", wristPlace);
                     
-                    gripperControl(grip_btn);*/
+                    gripperControl(grip_btn);
                 }
                 break;//}
             case ARM_STATE_MANUAL://{
@@ -270,7 +271,9 @@ public class TeleopCode extends OpMode
                     elbow_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // TODO: Check if RUN_USING_ENCODER is correct or if we should use RUN_USING_ENCODERS
                     InitArmState = false;
                 } 
-                if (-0.01<elbow_joy && elbow_joy<0.01){
+                if (tuck_pos_btn) {
+                    newArmState(ArmState.ARM_STATE_TUCK);
+                } else if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
                 } else {
@@ -290,7 +293,9 @@ public class TeleopCode extends OpMode
                     elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
                 }
-                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                if (tuck_pos_btn) {
+                    newArmState(ArmState.ARM_STATE_TUCK);
+                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else {
                     elbow_motor.setTargetPosition(elbowHold);
@@ -300,6 +305,21 @@ public class TeleopCode extends OpMode
                     telemetry.addData("Wrist location", wristPlace);
                     telemetry.addData("Elbow Location", elbow_motor.getCurrentPosition());
                     
+                    gripperControl(grip_btn);
+                }
+                break;//}
+                
+            case ARM_STATE_TUCK://{
+                telemetry.addData("Arm state", "Tuck");
+                if (InitArmState) {
+                    elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                }
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } 
+                else {
+                    armContol (.25, elbowTuck,  wristTuck , .004);
                     gripperControl(grip_btn);
                 }
                 break;//}
@@ -392,5 +412,23 @@ public class TeleopCode extends OpMode
             rg_servo.setPosition(0);
             lg_servo.setPosition(0);
         }
+    }
+    
+    private void armContol (double power, int elbow, double wrist, double wristStep) {
+        elbow_motor.setPower(power);
+        elbow_motor.setTargetPosition(elbow);
+                    
+        double currentWristPos=wrist_servo.getPosition();
+                   
+        if  (-wristStep < wrist - currentWristPos && wrist - currentWristPos < wristStep) {
+            wrist_servo.setPosition(wrist);
+        } else if (currentWristPos < wrist) {
+            wrist_servo.setPosition(currentWristPos + wristStep);
+        } else  {
+            wrist_servo.setPosition(currentWristPos - wristStep);
+        }
+                    
+        telemetry.addData("Target Wrist location", wrist);
+        telemetry.addData("Elbow Location", elbow_motor.getCurrentPosition());
     }
 }
