@@ -29,7 +29,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.util.Range;
+import java.lang.reflect.Array;
 
 public class RobotHardware
 {
@@ -56,7 +57,7 @@ public class RobotHardware
 
   // Declare internal variables(initialization status, errors, etc.) {
   public boolean initialized = false;
-  private LinearOpMode opmode = null;
+  private OpMode opmode = null;
   // }
 
   // Declare variables purely for convience {
@@ -76,9 +77,9 @@ public class RobotHardware
   /**
    * Create a RobotHardware instance and return it
    * The init() method MUST be called afterward before any other method is called!
-   * @param OpMode The LinearOpMode that this instance will use
+   * @param OpMode The OpMode that this instance will use
    */
-  public RobotHardware (LinearOpMode OpMode) { // OpMode is the argument, opmode is the global variable
+  public RobotHardware (OpMode OpMode) { // OpMode is the argument, opmode is the global variable
     opmode = OpMode;
   }
 
@@ -93,11 +94,11 @@ public class RobotHardware
     }
     try {
       telemetry = opmode.telemetry;
-      if (!telemetry) {
+      if (telemetry == null) {
         return false;
       }
       hardwareMap = opmode.hardwareMap;
-      if (!hardwareMap) {
+      if (hardwareMap == null) {
         opmode.telemetry.addData("RobotHardware","Error: hardwareMap has been incorrectly defined! Have you configured your robot?");
         return false;
       }
@@ -109,13 +110,13 @@ public class RobotHardware
       wrist_servo = hardwareMap.get(Servo.class, "WRIST_SERVO");
       lg_servo = hardwareMap.get(Servo.class, "LG_SERVO");
       rg_servo = hardwareMap.get(Servo.class, "RG_SERVO");
-      distance_sensor_left = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_LEFT");
-      distance_sensor_right = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_RIGHT");
+      /*distance_sensor_left = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_LEFT");
+      distance_sensor_right = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_RIGHT");*/
 
       lf_motor.setDirection(DcMotor.Direction.REVERSE);
       rf_motor.setDirection(DcMotor.Direction.FORWARD);
-      lb_motor.setDirection(DcMotor.Direction.FORWARD);
-      rb_motor.setDirection(DcMotor.Direction.REVERSE);
+      lb_motor.setDirection(DcMotor.Direction.REVERSE);
+      rb_motor.setDirection(DcMotor.Direction.FORWARD);
       elbow_motor.setDirection(DcMotor.Direction.REVERSE);
       
       lf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -206,13 +207,5 @@ public class RobotHardware
 
     this.setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
     
-    telemetry.addData("RobotHardware","lfPower: (%.2f), rfPower: (%.2f), lbPower: (%.2f), rbPower: (%.2f)",leftFrontPower,rightFrontPower,leftBackPower,rightBackPower);
-  }
-
-  public Array getDistance(DistanceUnit unit) {
-    Array distances = new Array();
-    distances[0] = distance_sensor_left.getDistance(unit);
-    distances[1] = distance_sensor_right.getDistance(unit);
-    return distances;
   }
 }
