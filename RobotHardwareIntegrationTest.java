@@ -34,15 +34,16 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.RobotHardware;
 
 /*
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@TeleOp(name="Teleop Code", group="Practice")
+@TeleOp(name="Robot Hardware TeleOp Integration Test", group="RobotHardware")
 
-public class TeleopCode extends OpMode
+public class RobotHardwareIntegrationTest extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
@@ -115,7 +116,6 @@ public class TeleopCode extends OpMode
         if (!initializationStatus) {
             telemetry.addData("Status", "Initialization failed!");
             throw new RuntimeException("Initialization failed!");
-            return;
         }
         
         // Initialize states for state machines {
@@ -172,7 +172,7 @@ public class TeleopCode extends OpMode
             case ARM_STATE_INIT://{
                 telemetry.addData("Arm state", "Init");
                 if (InitArmState) {
-                    elbow_motor.setPower(0);
+                    robot.elbow_motor.setPower(0);
                     
                     InitArmState = false;
                 }
@@ -183,7 +183,7 @@ public class TeleopCode extends OpMode
             case ARM_STATE_PICKUP://{
                 telemetry.addData("Arm state", "Pickup");
                 if (InitArmState) {
-                    elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
                 }
                 //if (tuck_pos_btn) {
@@ -214,11 +214,11 @@ public class TeleopCode extends OpMode
                     InitArmState = false;
                 } 
                 if (-0.01<elbow_joy && elbow_joy<0.01){
-                    elbowHold = elbow_motor.getCurrentPosition();
+                    elbowHold = robot.elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_HOLD);
                 } else {
-                    robot.setElbowPower(elbow_joy * ELBOW_SENSITIVITY);
-                    wristPlace += wrist_joy * WRIST_SENSITIVITY;
+                    robot.setElbowPower(elbow_joy * robot.ELBOW_SENSITIVITY);
+                    wristPlace += wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     robot.setWristPosition(wristPlace);
                     
@@ -232,14 +232,15 @@ public class TeleopCode extends OpMode
                     InitArmState = false;
                 }
                 if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    elbowHold = robot.elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else {
                     robot.elbow_motor.setTargetPosition(elbowHold);
-                    wristPlace += wrist_joy * WRIST_SENSITIVITY;
+                    wristPlace += wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     robot.setWristPosition(wristPlace);
                     telemetry.addData("Wrist location", wristPlace);
-                    telemetry.addData("Elbow Location", elbow_motor.getCurrentPosition());
+                    telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
                     
                     gripperControl(grip_btn);
                 }
@@ -266,7 +267,7 @@ public class TeleopCode extends OpMode
                 {
                     InitDriveState = false;
                 } else {
-                    robot.setDrivePower(drive_joy, turn_joy, strafe_joy);
+                    robot.driveRobot(drive_joy, turn_joy, strafe_joy);
                 }
                 break;
         }
