@@ -114,9 +114,11 @@ public class RobotHardware
 
       lf_motor.setDirection(DcMotor.Direction.REVERSE);
       rf_motor.setDirection(DcMotor.Direction.FORWARD);
-      lb_motor.setDirection(DcMotor.Direction.REVERSE);
-      rb_motor.setDirection(DcMotor.Direction.FORWARD);
-      elbow_motor.setDirection(DcMotor.Direction.REVERSE);
+      /*lb_motor.setDirection(DcMotor.Direction.REVERSE);
+      rb_motor.setDirection(DcMotor.Direction.FORWARD);*/ // Uncomment these for testing on old robot
+      lb_motor.setDirection(DcMotor.Direction.FORWARD);
+      rb_motor.setDirection(DcMotor.Direction.REVERSE);
+      elbow_motor.setDirection(DcMotor.Direction.FORWARD);
       
       lf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       rf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -162,7 +164,7 @@ public class RobotHardware
    */
   public void setElbowPower(double power) {
     elbow_motor.setPower(power);
-    telemetry.addData("RobotHardware","Elbow power: (%.2f)",power * ELBOW_SENSITIVITY);
+    telemetry.addData("RobotHardware","Elbow power: (%.2f)",power);
   }
 
   /**
@@ -171,7 +173,7 @@ public class RobotHardware
    */
   public void setWristPosition(double position) {
     wrist_servo.setPosition(position);
-    telemetry.addData("RobotHardware","Wrist position: (%.2f)",position * WRIST_SENSITIVITY);
+    telemetry.addData("RobotHardware","Wrist position: (%.2f)",position);
   }
 
   /**

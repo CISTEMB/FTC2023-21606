@@ -86,7 +86,7 @@ public class TeleopCode extends OpMode
     
     private double wristPlace = 0.525;
     private int elbowHold = 0;
-    private static double wristTuck = 1;
+    private static double wristTuck = 0;  // reverse for old robot
     private static int elbowTuck = -61;
     
     // preset arm pos
@@ -199,12 +199,12 @@ public class TeleopCode extends OpMode
                     // servo move
                     robot.setWristPosition(WRIST_PICKUP);
                     
-                    
+                    /*
                     robot.elbow_motor.setTargetPosition(elbowHold);
-                    wristPlace += wrist_joy * robot.WRIST_SENSITIVITY;
+                    wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     robot.setWristPosition(wristPlace);
-                    telemetry.addData("Wrist location", wristPlace);
+                    telemetry.addData("Wrist location", wristPlace);*/
                     
                     gripperControl(grip_btn);
                 }
@@ -222,7 +222,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
                 } else {
                     robot.setElbowPower(elbow_joy * robot.ELBOW_SENSITIVITY);
-                    wristPlace += wrist_joy * robot.WRIST_SENSITIVITY;
+                    wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     robot.setWristPosition(wristPlace);
                     
@@ -241,7 +241,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else {
                     robot.elbow_motor.setTargetPosition(elbowHold);
-                    wristPlace += wrist_joy * robot.WRIST_SENSITIVITY;
+                    wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     robot.setWristPosition(wristPlace);
                     telemetry.addData("Wrist location", wristPlace);
