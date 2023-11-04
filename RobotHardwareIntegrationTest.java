@@ -41,9 +41,9 @@ import org.firstinspires.ftc.teamcode.RobotHardware;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@TeleOp(name="Teleop Code", group="Teleop")
+@TeleOp(name="Robot Hardware TeleOp Integration Test", group="RobotHardware")
 
-public class TeleopCode extends OpMode
+public class RobotHardwareIntegrationTest extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
