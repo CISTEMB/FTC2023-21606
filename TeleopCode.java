@@ -86,8 +86,8 @@ public class TeleopCode extends OpMode
     
     private double wristPlace = 0.525;
     private int elbowHold = 0;
-    private double wristTuck = 1;
-    private int elbowTuck = -61;
+    private static double wristTuck = 1;
+    private static int elbowTuck = -61;
     
     // preset arm pos
     private static double WRIST_PICKUP = .5;
