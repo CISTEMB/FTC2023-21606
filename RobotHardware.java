@@ -131,6 +131,7 @@ public class RobotHardware
       rf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       lb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       rb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+      elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -181,7 +182,7 @@ public class RobotHardware
    * @param position The position of the grippers
    */
   public void setGripperPosition(double position) {
-    lg_servo.setPosition(position);
+    lg_servo.setPosition(1 - position);
     rg_servo.setPosition(position);
     telemetry.addData("RobotHardware","Gripper position: (%.2f)",position);
   }

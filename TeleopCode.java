@@ -84,10 +84,10 @@ public class TeleopCode extends OpMode
     private boolean InitArmState = false;
     private ElapsedTime ArmStateTime = new ElapsedTime();
     
-    private double wristPlace = 0.525;
+    private double wristPlace = 0;
     private int elbowHold = 0;
     private static double wristTuck = 0;  // reverse for old robot
-    private static int elbowTuck = -61;
+    private static int elbowTuck = 0;
     
     // preset arm pos
     private static double WRIST_PICKUP = .5;
@@ -179,7 +179,7 @@ public class TeleopCode extends OpMode
                     InitArmState = false;
                 }
                 if (true) {
-                    newArmState(ArmState.ARM_STATE_PICKUP);
+                    newArmState(ArmState.ARM_STATE_TUCK);
                 }
                 break;//}
             case ARM_STATE_PICKUP://{
