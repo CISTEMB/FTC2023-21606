@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.RobotHardware;
 
+
 /*
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
@@ -49,7 +50,7 @@ public class AutoCode extends OpMode
     private RobotHardware robot = new RobotHardware(this);
     
     // Declare controller related variables(prev button presses, etc.) {
-    private double turn_joy = 0;
+  /*  private double turn_joy = 0;
     private double drive_joy = 0;
     
     private double strafe_joy = 0;
@@ -61,12 +62,14 @@ public class AutoCode extends OpMode
     private boolean back_pos_btn;
     private boolean tuck_pos_btn;
     
-    private boolean grip_btn;
+    private boolean grip_btn;*/
     // }
     
     // Declare general global variables {
     private ElapsedTime runtime = new ElapsedTime();
     // }
+    
+    //boolean first=true;
 
 
   
@@ -74,7 +77,7 @@ public class AutoCode extends OpMode
     // State machine enums/variables {
     
     // Declare arm state machine enums and variables {
-    private enum ArmState {
+   /* private enum ArmState {
         ARM_STATE_INIT,
         ARM_STATE_MANUAL,
         ARM_STATE_PICKUP,
@@ -95,21 +98,22 @@ public class AutoCode extends OpMode
     
     // preset arm pos
     private static double WRIST_PICKUP = .5;
-    private static int ELBOW_PICKUP = 10;
+    private static int ELBOW_PICKUP = 10; */
     
     // }
     
     // Declare drive state machine enums and variables {
     private enum DriveState {
-        DRIVE_STATE_INIT,
-        DRIVE_STATE_CONTROL,
-        DRIVE_STATE_END,      // Might not need, there for structure's sake
+        INIT,
+        CLEAR_TRUSS,
+        FIND_LINE,
+        END,
     };
     
     private DriveState CurrentDriveState;
     private boolean InitDriveState = false;
     private ElapsedTime DriveStateTime = new ElapsedTime();
-    // }
+    // } 
     
     // }
     /*
@@ -125,8 +129,8 @@ public class AutoCode extends OpMode
         }
         
         // Initialize states for state machines {
-        newDriveState(DriveState.DRIVE_STATE_INIT);
-        newArmState(ArmState.ARM_STATE_INIT);
+        newDriveState(DriveState.INIT);
+        //newArmState(ArmState.ARM_STATE_INIT);
         // }
     }
 
@@ -152,13 +156,12 @@ public class AutoCode extends OpMode
     @Override
     public void loop() {
         
-          
-    selfDrive(.5, 10);
+      
     
-        //wait(300000);
+        //sleep(300000);
         
         // Read controllers {
-        drive_joy = -gamepad1.left_stick_y;
+ /*       drive_joy = -gamepad1.left_stick_y;
         turn_joy  =  gamepad1.left_stick_x;
         strafe_joy = gamepad1.right_stick_x;
         telemetry.addData("Drive Joysticks", "drive (%.2f), turn (%.2f), strafe (%.2f)", drive_joy, turn_joy, strafe_joy);
@@ -177,11 +180,11 @@ public class AutoCode extends OpMode
         } else {
             grip_btn = false;
         }
-        telemetry.addData("Grip  Button", grip_btn);
+        telemetry.addData("Grip  Button", grip_btn);*/
         
         // }
         
-        switch (CurrentArmState) {
+     /*   switch (CurrentArmState) {
             case ARM_STATE_INIT://{
                 telemetry.addData("Arm state", "Init");
                 if (InitArmState) {
@@ -215,7 +218,7 @@ public class AutoCode extends OpMode
                     wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     robot.setWristPosition(wristPlace);
-                    telemetry.addData("Wrist location", wristPlace);*/
+                    telemetry.addData("Wrist location", wristPlace);
                     
                     gripperControl(grip_btn);
                 }
@@ -276,10 +279,10 @@ public class AutoCode extends OpMode
                     gripperControl(grip_btn);
                 }
                 break;//}
-         }
+         }*/
         
-        switch (CurrentDriveState){
-            case DRIVE_STATE_INIT:
+       switch (CurrentDriveState){
+            case INIT:
                 telemetry.addData("Drive state", "Init");
                 if (InitDriveState)
                 {
@@ -288,19 +291,30 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } 
                 if (true) { // Because we not want to immedatly start
-                    newDriveState(DriveState.DRIVE_STATE_CONTROL);
+                    newDriveState(DriveState.CLEAR_TRUSS);
                 }
                 break;
                 
-            case DRIVE_STATE_CONTROL:
-                telemetry.addData("Drive state", "Controlling");
+            case CLEAR_TRUSS:
+                telemetry.addData("Drive state", "Clearing Truss");
                 if (InitDriveState)
                 {
+                    speedDrive(.5);
                     InitDriveState = false;
-                } else {
-                    robot.driveRobot(drive_joy, turn_joy, strafe_joy);
+                } 
+                if (gotDistance (10)) {  // TIme to leave
+                    newDriveState(DriveState.FIND_LINE);
+                } else {  // Stick around
+                    
                 }
                 break;
+                
+            case FIND_LINE:
+                telemetry.addData("Drive state","Find Line");
+                if (true)
+                {
+                    stopDrive();
+                } 
         }
         
 
@@ -322,7 +336,7 @@ public class AutoCode extends OpMode
         InitDriveState = true;
     }
     
-    private void newArmState(ArmState newState) {
+  /*  private void newArmState(ArmState newState) {
         ArmStateTime.reset();
         CurrentArmState = newState;
         InitArmState = true;
@@ -348,7 +362,7 @@ public class AutoCode extends OpMode
                     
         telemetry.addData("Target Wrist location", wrist);
         telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
-    }
+    }*/
     
     private void selfDriveInit(){
         robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -361,7 +375,7 @@ public class AutoCode extends OpMode
         robot.rb_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
     
-    private void selfDrive (double power, double inches){
+    private void distanceDrive (double power, double inches){
         int counts=(int)(inches*100);
         robot.lf_motor.setPower(power);
         robot.rf_motor.setPower(power);
@@ -375,7 +389,41 @@ public class AutoCode extends OpMode
         robot.rf_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.lb_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.rb_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        
+    }
+    
+    private void speedDrive (double speed){
+        robot.lf_motor.setPower(speed);
+        robot.rf_motor.setPower(speed);
+        robot.lb_motor.setPower(speed);
+        robot.rb_motor.setPower(speed);
+        robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    
+    private void stopDrive (){
+        robot.lf_motor.setPower(0);
+        robot.rf_motor.setPower(0);
+        robot.lb_motor.setPower(0);
+        robot.rb_motor.setPower(0);
+        robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    
+    private boolean gotDistance (double inches){
+        int counts=(int)(inches*100);
+        if ((robot.lf_motor.getCurrentPosition() +
+             robot.rf_motor.getCurrentPosition() +
+             robot.lb_motor.getCurrentPosition() +
+             robot.rb_motor.getCurrentPosition())>= counts*4){
+                 return true;
+             }else{
+                 return false;
+             }
+             
         
         
     }
