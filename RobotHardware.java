@@ -183,10 +183,14 @@ public class RobotHardware
    * Set the position of the gripper servos together
    * @param position The position of the grippers
    */
-  public void setGripperPosition(double position) {
-    lg_servo.setPosition(1 - position);
-    rg_servo.setPosition(position);
-    telemetry.addData("RobotHardware","Gripper position: (%.2f)",position);
+  public void setGripperPosition(double left_pos, double right_pos) {
+    double tl = left_pos;
+    double tr = right_pos;
+    lg_servo.setPosition(tl);
+    rg_servo.setPosition(tr);
+    //lg_servo.setPosition(.25);
+    //rg_servo.setPosition(.25);
+    telemetry.addData("RobotHardware","lg position: (%.2f); rg position: (%.2f) "+ left_pos +" "+ right_pos);
   }
 
   public void driveRobot(double forwardSpeed, double turnSpeed, double strafeSpeed, boolean slowmode_state) {
