@@ -78,6 +78,7 @@ public class TeleopCode extends OpMode
         ARM_STATE_INIT,
         ARM_STATE_MANUAL,
         ARM_STATE_PICKUP,
+        ARM_STATE_BACK,
         ARM_STATE_HOLD,
         ARM_STATE_TUCK,
         ARM_STATE_ELBOW_HOLD,
@@ -90,12 +91,14 @@ public class TeleopCode extends OpMode
     
     private double wristPlace = 0;
     private int elbowHold = 0;
-    private static double wristTuck = 0;  // reverse for old robot
-    private static int elbowTuck = 0;
+    private static double WRIST_TUCK = 0;  // reverse for old robot
+    private static int ELBOW_TUCK = 0;
+    private static int ELBOW_BACK = 546;
+    private static double WRIST_BACK = 0.274;
     
     // preset arm pos
-    private static double WRIST_PICKUP = .5;
-    private static int ELBOW_PICKUP = 10;
+    private static double WRIST_PICKUP = 1.0;
+    private static int ELBOW_PICKUP = 54;
     
     // }
     
@@ -194,33 +197,6 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_TUCK);
                 }
                 break;//}
-            case ARM_STATE_PICKUP://{
-                telemetry.addData("Arm state", "Pickup");
-                if (InitArmState) {
-                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    InitArmState = false;
-                }
-                if (tuck_pos_btn) {
-                    newArmState(ArmState.ARM_STATE_TUCK);
-                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
-                    
-                    newArmState(ArmState.ARM_STATE_MANUAL);
-                } else {
-                    // elbow move 
-                    robot.elbow_motor.setTargetPosition(ELBOW_PICKUP);
-                    // servo move
-                    robot.setWristPosition(WRIST_PICKUP);
-                    
-                    /*
-                    robot.elbow_motor.setTargetPosition(elbowHold);
-                    wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
-                    wristPlace = Range.clip(wristPlace, 0, 1);
-                    robot.setWristPosition(wristPlace);
-                    telemetry.addData("Wrist location", wristPlace);*/
-                    
-                    gripperControl(grip_wide_btn, grip_mid_btn);
-                }
-                break;//}
             case ARM_STATE_MANUAL://{
                 telemetry.addData("Arm state", "Manual");
                 if (InitArmState) {
@@ -251,6 +227,12 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
+                }   else if(back_pos_btn){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else if(pickup_pos_btn){
+                    newArmState(ArmState.ARM_STATE_PICKUP);
+                } else if(tuck_pos_btn){
+                    newArmState(ArmState.ARM_STATE_TUCK);
                 } else {
                     robot.elbow_motor.setTargetPosition(elbowHold);
                     wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
@@ -271,9 +253,49 @@ public class TeleopCode extends OpMode
                 }
                 if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
-                } 
+                }  else if(back_pos_btn){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else if(pickup_pos_btn){
+                    newArmState(ArmState.ARM_STATE_PICKUP);
+                }
                 else {
-                    armControl (.25, elbowTuck,  wristTuck , .004);
+                    armControl (.25, ELBOW_TUCK,  WRIST_TUCK , .004);
+                    gripperControl(grip_wide_btn, grip_mid_btn);
+                }
+                break;//}
+            
+            case ARM_STATE_BACK://{
+                telemetry.addData("Arm state", "Back");
+                if (InitArmState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                }
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } else if(tuck_pos_btn){
+                    newArmState(ArmState.ARM_STATE_TUCK);
+                } else if(pickup_pos_btn){
+                    newArmState(ArmState.ARM_STATE_PICKUP);
+                } else {
+                    armControl (.25, ELBOW_BACK, WRIST_BACK, .004);
+                    gripperControl(grip_wide_btn, grip_mid_btn);
+                }
+                break;//}
+            
+            case ARM_STATE_PICKUP://{
+                telemetry.addData("Arm state", "Back");
+                if (InitArmState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                }
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } else if(tuck_pos_btn){
+                    newArmState(ArmState.ARM_STATE_TUCK);
+                } else if(back_pos_btn){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else {
+                    armControl (.25, ELBOW_PICKUP, WRIST_PICKUP, .004);
                     gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -347,14 +369,14 @@ public class TeleopCode extends OpMode
           robot.setElbowPower(power);
         robot.elbow_motor.setTargetPosition(elbow);
                     
-        double currentWristPos=robot.wrist_servo.getPosition();
+        wristPlace=robot.wrist_servo.getPosition();
                    
-        if  (-wristStep < wrist - currentWristPos && wrist - currentWristPos < wristStep) {
+        if  (-wristStep < wrist - wristPlace && wrist - wristPlace < wristStep) {
             robot.setWristPosition(wrist);
-        } else if (currentWristPos < wrist) {
-            robot.setWristPosition(currentWristPos + wristStep);
+        } else if (wristPlace < wrist) {
+            robot.setWristPosition(wristPlace + wristStep);
         } else  {
-            robot.setWristPosition(currentWristPos - wristStep);
+            robot.setWristPosition(wristPlace - wristStep);
         }
                     
         telemetry.addData("Target Wrist location", wrist);
