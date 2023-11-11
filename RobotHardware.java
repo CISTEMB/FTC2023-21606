@@ -71,6 +71,8 @@ public class RobotHardware
   public double STRAFE_SENSITIVITY = 0.75;
   public double WRIST_SENSITIVITY = 0.001;
   public double ELBOW_SENSITIVITY = 0.5;
+  public double SLOW_FACTOR = 0.5;
+  public double GRIPPER_MID = 0.25;
   // }
 
   /**
@@ -187,24 +189,33 @@ public class RobotHardware
     telemetry.addData("RobotHardware","Gripper position: (%.2f)",position);
   }
 
-  public void driveRobot(double forwardSpeed, double turnSpeed, double strafeSpeed) {
+  public void driveRobot(double forwardSpeed, double turnSpeed, double strafeSpeed, boolean slowmode_state) {
     // Calculate power {
-    double leftFrontPower = Range.clip((TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)+(STRAFE_SENSITIVITY*strafeSpeed),
+    
+    double speedfactor;
+    if (slowmode_state) {
+      speedfactor = SLOW_FACTOR;
+    } else {
+      speedfactor = 1;
+    }
+    telemetry.addData("speedfactor: ", speedfactor);
+    double leftFrontPower = Range.clip(speedfactor*((TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)+(STRAFE_SENSITIVITY*strafeSpeed)),
                                 -MAX_MOTOR_POWER,
                                 MAX_MOTOR_POWER
     );
-    double rightFrontPower = Range.clip(-(TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)-(STRAFE_SENSITIVITY*strafeSpeed),
+    double rightFrontPower = Range.clip(speedfactor*(-(TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)-(STRAFE_SENSITIVITY*strafeSpeed)),
                                 -MAX_MOTOR_POWER,
                                 MAX_MOTOR_POWER
     );
-    double leftBackPower = Range.clip((TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)-(STRAFE_SENSITIVITY*strafeSpeed),
+    double leftBackPower = Range.clip(speedfactor*((TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)-(STRAFE_SENSITIVITY*strafeSpeed)),
                                 -MAX_MOTOR_POWER,
                                 MAX_MOTOR_POWER
     );
-    double rightBackPower = Range.clip(-(TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)+(STRAFE_SENSITIVITY*strafeSpeed),
+    double rightBackPower = Range.clip(speedfactor*(-(TURN_SENSITIVITY*turnSpeed)+(DRIVE_SENSITIVITY*forwardSpeed)+(STRAFE_SENSITIVITY*strafeSpeed)),
                                 -MAX_MOTOR_POWER,
                                 MAX_MOTOR_POWER
     );
+    telemetry.addData("motor powers", "lf: (%.2f), rf: (%.2f), lb: (%.2f), rb: (%.2f)", leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
     // }
 
     this.setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);

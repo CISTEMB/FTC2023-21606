@@ -61,6 +61,9 @@ public class TeleopCode extends OpMode
     private boolean tuck_pos_btn;
     
     private boolean grip_btn;
+    private boolean slowmode_btn = false;
+    private boolean slowmode_btn_old = false;
+    private boolean slowmode_state = false;
     // }
     
     // Declare general global variables {
@@ -147,10 +150,18 @@ public class TeleopCode extends OpMode
     @Override
     public void loop() {
         // Read controllers {
+        // Gamepad 1
         drive_joy = -gamepad1.left_stick_y;
         turn_joy  =  gamepad1.left_stick_x;
         strafe_joy = gamepad1.right_stick_x;
         telemetry.addData("Drive Joysticks", "drive (%.2f), turn (%.2f), strafe (%.2f)", drive_joy, turn_joy, strafe_joy);
+        
+        slowmode_btn = gamepad1.left_bumper;
+        if (!slowmode_btn_old && slowmode_btn) {
+            slowmode_state = !slowmode_state;
+        }
+        slowmode_btn_old = slowmode_btn;
+        telemetry.addData("Slowmode ", "button(lb): " + slowmode_btn + ", state: " + slowmode_state);
         
         elbow_joy = gamepad2.left_stick_y;
         wrist_joy = gamepad2.right_stick_y;
@@ -287,7 +298,7 @@ public class TeleopCode extends OpMode
                 {
                     InitDriveState = false;
                 } else {
-                    robot.driveRobot(drive_joy, turn_joy, strafe_joy);
+                    robot.driveRobot(drive_joy, turn_joy, strafe_joy, slowmode_state);
                 }
                 break;
         }
