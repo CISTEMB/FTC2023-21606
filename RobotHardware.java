@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import java.util.Map;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -38,6 +39,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 
 public class RobotHardware
 {
@@ -52,6 +54,7 @@ public class RobotHardware
   public Servo rg_servo = null;
   public DistanceSensor distance_sensor_left = null;
   public DistanceSensor distance_sensor_right = null;
+  public ColorSensor clrl_sensor = null;
   // }
 
   // Declare internal variables(initialization status, errors, etc.) {
@@ -74,6 +77,12 @@ public class RobotHardware
   public double SLOW_FACTOR = 0.5;
   public double GRIPPER_MID = 0.25;
   // }
+  
+  // declare cinstants for autonimos {
+  public int RED_LIMIT = 1500;
+  public int BLUE_LIMIT = 2500;
+  
+  //}
 
   /**
    * Create a RobotHardware instance and return it
@@ -111,6 +120,7 @@ public class RobotHardware
       wrist_servo = hardwareMap.get(Servo.class, "WRIST_SERVO");
       lg_servo = hardwareMap.get(Servo.class, "LG_SERVO");
       rg_servo = hardwareMap.get(Servo.class, "RG_SERVO");
+      clrl_sensor = hardwareMap.get(ColorSensor.class, "CLRL_SENSOR");
       /*distance_sensor_left = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_LEFT");
       distance_sensor_right = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_RIGHT");*/
 
@@ -186,10 +196,10 @@ public class RobotHardware
   public void setGripperPosition(double left_pos, double right_pos) {
     double tl = left_pos;
     double tr = right_pos;
-    lg_servo.setPosition(tl);
-    rg_servo.setPosition(tr);
-    //lg_servo.setPosition(.25);
-    //rg_servo.setPosition(.25);
+    //lg_servo.setPosition(tl);
+    //rg_servo.setPosition(tr);
+    lg_servo.setPosition(-.75);
+    rg_servo.setPosition(-.25);
     telemetry.addData("RobotHardware","lg position: (%.2f); rg position: (%.2f) "+ left_pos +" "+ right_pos);
   }
 

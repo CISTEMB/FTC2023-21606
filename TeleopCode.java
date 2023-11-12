@@ -353,7 +353,8 @@ public class TeleopCode extends OpMode
     
     private void gripperControl(boolean wide_btn, boolean mid_btn) {
         if (mid_btn) {
-            robot.setGripperPosition(1-robot.GRIPPER_MID, robot.GRIPPER_MID);
+            //robot.setGripperPosition(1-robot.GRIPPER_MID, robot.GRIPPER_MID);
+            robot.setGripperPosition(.75, .25);
             //robot.setGripperPosition(1,1);
             telemetry.addData ("GC", "mid");
         } else if (wide_btn) {

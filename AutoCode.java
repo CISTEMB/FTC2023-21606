@@ -311,10 +311,24 @@ public class AutoCode extends OpMode
                 
             case FIND_LINE:
                 telemetry.addData("Drive state","Find Line");
+                if (InitDriveState)  // Start Starting
+                {
+                    speedDrive(.1); 
+                    InitDriveState = false;
+                } else if (gotLine()) {  // Time to leave
+                    newDriveState(DriveState.END);
+                } else {        // Stick around
+                    
+                }
+                break;
+                
+            case END:
+                telemetry.addData("Drive state","END");
                 if (true)
                 {
                     stopDrive();
-                } 
+                }
+                break;
         }
         
 
@@ -423,9 +437,21 @@ public class AutoCode extends OpMode
              }else{
                  return false;
              }
-             
-        
-        
     }
+    
+    
+    private boolean gotLine(){
+        int blue = robot.clrl_sensor.blue();
+        int red = robot.clrl_sensor.red();
+        telemetry.addData("color", "red:"+red+" blue:"+blue);
+        if (blue > robot.BLUE_LIMIT){
+            return true;
+        } else if (red > robot.RED_LIMIT){
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
  }
  
