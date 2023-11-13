@@ -75,7 +75,7 @@ public class RobotHardware
   public double WRIST_SENSITIVITY = 0.001;
   public double ELBOW_SENSITIVITY = 0.5;
   public double SLOW_FACTOR = 0.5;
-  public double GRIPPER_MID = 0.25;
+  public double GRIPPER_MID = 0.5;
   // }
   
   // declare cinstants for autonimos {
@@ -194,13 +194,9 @@ public class RobotHardware
    * @param position The position of the grippers
    */
   public void setGripperPosition(double left_pos, double right_pos) {
-    double tl = left_pos;
-    double tr = right_pos;
-    //lg_servo.setPosition(tl);
-    //rg_servo.setPosition(tr);
-    lg_servo.setPosition(-.75);
-    rg_servo.setPosition(-.25);
-    telemetry.addData("RobotHardware","lg position: (%.2f); rg position: (%.2f) "+ left_pos +" "+ right_pos);
+    lg_servo.setPosition(left_pos);
+    rg_servo.setPosition(right_pos);
+    telemetry.addData("RobotHardware","lg position: (%.2f); rg position: (%.2f) ",  left_pos, right_pos);
   }
 
   public void driveRobot(double forwardSpeed, double turnSpeed, double strafeSpeed, boolean slowmode_state) {
