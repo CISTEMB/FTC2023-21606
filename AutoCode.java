@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.RobotHardware;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 /*
@@ -115,6 +116,13 @@ public class AutoCode extends OpMode
     private ElapsedTime DriveStateTime = new ElapsedTime();
     // } 
     
+    // Declare distance sensor stuff {
+    private double minReadingLeft = 65535;
+    private double minReadingRight = 65535;
+    private double minReadingMiddle = 65535;
+    private boolean propLeft = false;
+    private boolean propRight = false;
+    private boolean propMiddle = false;
     // }
     /*
      * Code to run ONCE when the driver hits INIT
@@ -139,7 +147,6 @@ public class AutoCode extends OpMode
      */
     @Override
     public void init_loop() {
-        selfDriveInit();
     }
 
     /*
@@ -318,7 +325,7 @@ public class AutoCode extends OpMode
                 } else if (gotLine()) {  // Time to leave
                     newDriveState(DriveState.END);
                 } else {        // Stick around
-                    
+                    checkLowestDSensor();
                 }
                 break;
                 
@@ -377,17 +384,6 @@ public class AutoCode extends OpMode
         telemetry.addData("Target Wrist location", wrist);
         telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
     }*/
-    
-    private void selfDriveInit(){
-        robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.lf_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.rf_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.lb_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.rb_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
     
     private void distanceDrive (double power, double inches){
         int counts=(int)(inches*100);
@@ -451,6 +447,26 @@ public class AutoCode extends OpMode
         } else {
             return false;
         }
+    }
+    
+    
+    private void checkLowestDSensor() {
+        double tempL = robot.leftd_sensor.getDistance(DistanceUnit.INCH);
+        //double tempR = robot.rightd_sensor.getDistance(DistanceUnit.INCH);
+        //double tempM = robot.middled_sensor.getDistance(DistanceUnit.INCH);
+        if (tempL < minReadingLeft) {
+            minReadingLeft = tempL;
+        }
+        /*if (tempR < minReadingRight) {
+            minReadingRight = tempR;
+        }
+        if (tempM < minReadingMiddle) {
+            minReadingMiddle = tempM;
+        }*/
+        if (minReadingLeft < minReadingRight && minReadingLeft < minReadingMiddle) {
+            propLeft = true;
+        }
+        telemetry.addData("distances", "left: (%.2f)", minReadingLeft);
     }
     
  }

@@ -40,6 +40,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 public class RobotHardware
 {
@@ -55,6 +56,7 @@ public class RobotHardware
   public DistanceSensor distance_sensor_left = null;
   public DistanceSensor distance_sensor_right = null;
   public ColorSensor clrl_sensor = null;
+  public DistanceSensor leftd_sensor = null;
   // }
 
   // Declare internal variables(initialization status, errors, etc.) {
@@ -78,7 +80,7 @@ public class RobotHardware
   public double GRIPPER_MID = 0.5;
   // }
   
-  // declare cinstants for autonimos {
+  // declare constants for autonomous {
   public int RED_LIMIT = 1500;
   public int BLUE_LIMIT = 2500;
   
@@ -121,6 +123,7 @@ public class RobotHardware
       lg_servo = hardwareMap.get(Servo.class, "LG_SERVO");
       rg_servo = hardwareMap.get(Servo.class, "RG_SERVO");
       clrl_sensor = hardwareMap.get(ColorSensor.class, "CLRL_SENSOR");
+      leftd_sensor = hardwareMap.get(DistanceSensor.class, "LEFTD_SENSOR");
       /*distance_sensor_left = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_LEFT");
       distance_sensor_right = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_RIGHT");*/
 
