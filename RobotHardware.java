@@ -76,7 +76,7 @@ public class RobotHardware
   public double STRAFE_SENSITIVITY = 0.75;
   public double WRIST_SENSITIVITY = 0.001;
   public double ELBOW_SENSITIVITY = 0.5;
-  public double SLOW_FACTOR = 0.5;
+  public double SLOW_FACTOR = 0.2;
   public double GRIPPER_MID = 0.5;
   // }
   
