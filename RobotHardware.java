@@ -81,8 +81,8 @@ public class RobotHardware
   // }
   
   // declare constants for autonomous {
-  public int RED_LIMIT = 1500;
-  public int BLUE_LIMIT = 2500;
+  public int RED_LIMIT = 500;
+  public int BLUE_LIMIT = 500;
   
   //}
 

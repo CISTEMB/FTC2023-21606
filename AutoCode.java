@@ -309,7 +309,7 @@ public class AutoCode extends OpMode
                     speedDrive(.5);
                     InitDriveState = false;
                 } 
-                if (gotDistance (10)) {  // TIme to leave
+                if (gotDistance (6)) {  // TIme to leave
                     newDriveState(DriveState.FIND_LINE);
                 } else {  // Stick around
                     
