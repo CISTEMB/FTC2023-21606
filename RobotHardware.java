@@ -53,10 +53,12 @@ public class RobotHardware
   public Servo wrist_servo = null;
   public Servo lg_servo = null; 
   public Servo rg_servo = null;
-  public DistanceSensor distance_sensor_left = null;
-  public DistanceSensor distance_sensor_right = null;
+  public Servo launch_servo = null;
   public ColorSensor clrl_sensor = null;
   public DistanceSensor leftd_sensor = null;
+  public DistanceSensor rightd_sensor = null;
+  public DistanceSensor centerd_sensor = null;
+  
   // }
 
   // Declare internal variables(initialization status, errors, etc.) {
@@ -81,8 +83,8 @@ public class RobotHardware
   // }
   
   // declare constants for autonomous {
-  public int RED_LIMIT = 500;
-  public int BLUE_LIMIT = 500;
+  public int RED_LIMIT = 3500;
+  public int BLUE_LIMIT = 3500;
   
   //}
 
@@ -122,10 +124,11 @@ public class RobotHardware
       wrist_servo = hardwareMap.get(Servo.class, "WRIST_SERVO");
       lg_servo = hardwareMap.get(Servo.class, "LG_SERVO");
       rg_servo = hardwareMap.get(Servo.class, "RG_SERVO");
+      launch_servo = hardwareMap.get(Servo.class, "LAUNCH_SERVO");
       clrl_sensor = hardwareMap.get(ColorSensor.class, "CLRL_SENSOR");
       leftd_sensor = hardwareMap.get(DistanceSensor.class, "LEFTD_SENSOR");
-      /*distance_sensor_left = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_LEFT");
-      distance_sensor_right = hardwareMap.get(DistanceSensor.class, "DISTANCE_SENSOR_RIGHT");*/
+      rightd_sensor = hardwareMap.get(DistanceSensor.class, "RIGHTD_SENSOR");
+      centerd_sensor = hardwareMap.get(DistanceSensor.class, "CENTERD_SENSOR");
 
       lf_motor.setDirection(DcMotor.Direction.REVERSE);
       rf_motor.setDirection(DcMotor.Direction.FORWARD);

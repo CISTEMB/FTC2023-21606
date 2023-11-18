@@ -119,7 +119,7 @@ public class AutoCode extends OpMode
     // Declare distance sensor stuff {
     private double minReadingLeft = 65535;
     private double minReadingRight = 65535;
-    private double minReadingMiddle = 65535;
+    private double minReadingCenter = 65535;
     private boolean propLeft = false;
     private boolean propRight = false;
     private boolean propMiddle = false;
@@ -452,21 +452,21 @@ public class AutoCode extends OpMode
     
     private void checkLowestDSensor() {
         double tempL = robot.leftd_sensor.getDistance(DistanceUnit.INCH);
-        //double tempR = robot.rightd_sensor.getDistance(DistanceUnit.INCH);
-        //double tempM = robot.middled_sensor.getDistance(DistanceUnit.INCH);
+        double tempR = robot.rightd_sensor.getDistance(DistanceUnit.INCH);
+        double tempC = robot.centerd_sensor.getDistance(DistanceUnit.INCH);
         if (tempL < minReadingLeft) {
             minReadingLeft = tempL;
         }
-        /*if (tempR < minReadingRight) {
+        if (tempR < minReadingRight) {
             minReadingRight = tempR;
         }
-        if (tempM < minReadingMiddle) {
-            minReadingMiddle = tempM;
-        }*/
-        if (minReadingLeft < minReadingRight && minReadingLeft < minReadingMiddle) {
+        if (tempC < minReadingCenter) {
+            minReadingCenter = tempC;
+        }
+        if (minReadingLeft < minReadingRight && minReadingLeft < minReadingCenter) {
             propLeft = true;
         }
-        telemetry.addData("distances", "left: (%.2f)", minReadingLeft);
+        telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
     }
     
  }

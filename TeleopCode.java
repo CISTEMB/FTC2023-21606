@@ -50,18 +50,24 @@ public class TeleopCode extends OpMode
     // Declare controller related variables(prev button presses, etc.) {
     private double turn_joy = 0;
     private double drive_joy = 0;
-    
     private double strafe_joy = 0;
     
     private double elbow_joy = 0;
     private double wrist_joy = 0;
     
-    private boolean pickup_pos_btn;
+    private boolean pickup_pos_btn;                // current btn state
+    private boolean pickup_pos_btn_old = false;    // prev btn state
+    private boolean pickup_pos_btn_press = false;  // when btn changes from false to true
     private boolean back_pos_btn;
+    private boolean back_pos_btn_old = false;
+    private boolean back_pos_btn_press = false;
     private boolean tuck_pos_btn;
+    private boolean tuck_pos_btn_old = false;
+    private boolean tuck_pos_btn_press = false;
     
     private boolean grip_wide_btn;
     private boolean grip_mid_btn;
+    
     private boolean slowmode_btn = false;
     private boolean slowmode_btn_old = false;
     private boolean slowmode_state = false;
@@ -108,7 +114,7 @@ public class TeleopCode extends OpMode
     private static double ELBOW_MAX_SPEED = .75;
     private static double WRIST_TUCK = 0;  // reverse for old robot
     private static int ELBOW_TUCK = 0;
-     private static int ELBOW_PRETUCK = 200;
+    private static int ELBOW_PRETUCK = 200; // COACH
     private static double WRIST_BACK = 0.22;   
     private static int ELBOW_BACK = 512;
     private static double WRIST_PICKUP = 0.8;
@@ -187,9 +193,27 @@ public class TeleopCode extends OpMode
         telemetry.addData("Arm Joysticks", "arm (%.2f), wrist (%.2f)", elbow_joy, wrist_joy);
         
         pickup_pos_btn = gamepad2.y;
+        if (!pickup_pos_btn_old && pickup_pos_btn) {
+            pickup_pos_btn_press = true;
+        } else {
+            pickup_pos_btn_press = false;
+        }
+        pickup_pos_btn_old = pickup_pos_btn;
         tuck_pos_btn = gamepad2.a;
+        if (!tuck_pos_btn_old && tuck_pos_btn) {
+            tuck_pos_btn_press = true;
+        } else {
+            tuck_pos_btn_press = false;
+        }
+        tuck_pos_btn_old = tuck_pos_btn;
         back_pos_btn = gamepad2.b;
-        telemetry.addData("Pos Btns", "pu(y): " + pickup_pos_btn + ", tuck(a): " + tuck_pos_btn + ", back(b): " + back_pos_btn);
+        if (!back_pos_btn_old && back_pos_btn) {
+            back_pos_btn_press = true;
+        } else {
+            back_pos_btn_press = false;
+        }
+        back_pos_btn_old = back_pos_btn;
+        telemetry.addData("Pos Btns", "pu(y): " + pickup_pos_btn + ", tuck(a): " + tuck_pos_btn + ", back(b): " + back_pos_btn + back_pos_btn_press);
         
         if (gamepad2.right_trigger > .5 || gamepad1.right_trigger > .5) {
             grip_wide_btn = true;
@@ -249,11 +273,11 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
-                }   else if(back_pos_btn){
+                }   else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
-                } else if(pickup_pos_btn){
+                } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PICKUP);
-                } else if(tuck_pos_btn){
+                } else if(tuck_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else {
                     robot.elbow_motor.setTargetPosition(elbowHold);
@@ -296,9 +320,9 @@ public class TeleopCode extends OpMode
                 }
                 if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
-                }  else if(back_pos_btn){
+                }  else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
-                } else if(pickup_pos_btn){
+                } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 }
                 else {
@@ -315,9 +339,9 @@ public class TeleopCode extends OpMode
                 }
                 if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
-                } else if(tuck_pos_btn){
+                } else if(tuck_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_TUCK);
-                } else if(pickup_pos_btn){
+                } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 } else {
                     armControl (ELBOW_MAX_SPEED, ELBOW_BACK, WRIST_BACK, .004);
@@ -333,9 +357,9 @@ public class TeleopCode extends OpMode
                 }
                 if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
-                } else if(tuck_pos_btn){
+                } else if(tuck_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PRETUCK);
-                } else if(back_pos_btn){
+                } else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else {
                     armControl (ELBOW_MAX_SPEED, ELBOW_PICKUP, WRIST_PICKUP, .004);
