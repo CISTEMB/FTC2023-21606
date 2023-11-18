@@ -85,7 +85,11 @@ public class RobotHardware
   // declare constants for autonomous {
   public int RED_LIMIT = 3500;
   public int BLUE_LIMIT = 3500;
+  // }
   
+  // declare constants for launcher
+  public double LAUNCH_DRONE = 0;
+  public double HOLD_DRONE = 1;
   //}
 
   /**
@@ -152,6 +156,8 @@ public class RobotHardware
       elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      
+      launch_servo.setPosition(HOLD_DRONE);
 
       telemetry.addData("RobotHardware","Initialized successfully!");
       initialized = true;

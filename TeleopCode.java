@@ -395,15 +395,15 @@ public class TeleopCode extends OpMode
         
         
         // this is the launch code
-        /*
-        if (d1Launch_btn == true &&
-            d2Launch_btn == true &&
-            run time>= 90) {
-            launch the launcher;
-            }  else {
-            // leave servo alone
-            }
-            */ 
+        if (d1Launch_btn   && d2Launch_btn   ) {
+  //           && run time>= 90
+             
+            telemetry.addData("Launching", "!!!");
+            robot.launch_servo.setPosition(robot.LAUNCH_DRONE);
+        }  else {
+            robot.launch_servo.setPosition(robot.HOLD_DRONE);
+        }
+            
         
         
 
