@@ -306,10 +306,11 @@ public class AutoCode extends OpMode
                 telemetry.addData("Drive state", "Clearing Truss");
                 if (InitDriveState)
                 {
+                    robot.resetDriveEncoders();
                     speedDrive(.5);
                     InitDriveState = false;
                 } 
-                if (gotDistance (6)) {  // TIme to leave
+                if (gotDistance (24)) {  // Time to leave
                     newDriveState(DriveState.FIND_LINE);
                 } else {  // Stick around
                     
@@ -320,7 +321,7 @@ public class AutoCode extends OpMode
                 telemetry.addData("Drive state","Find Line");
                 if (InitDriveState)  // Start Starting
                 {
-                    speedDrive(.1); 
+                    speedDrive(0); 
                     InitDriveState = false;
                 } else if (gotLine()) {  // Time to leave
                     newDriveState(DriveState.END);
@@ -424,7 +425,7 @@ public class AutoCode extends OpMode
     }
     
     private boolean gotDistance (double inches){
-        int counts=(int)(inches*100);
+        int counts=(int)(inches*38);
         if ((robot.lf_motor.getCurrentPosition() +
              robot.rf_motor.getCurrentPosition() +
              robot.lb_motor.getCurrentPosition() +

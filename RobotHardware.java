@@ -183,6 +183,14 @@ public class RobotHardware
     telemetry.addData("RobotHardware","lfPower: (%.2f), rfPower: (%.2f), lbPower: (%.2f), rbPower: (%.2f)",lfPower,rfPower,lbPower,rbPower);
   }
 
+  public void resetDriveEncoders() {
+    lf_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    rf_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    lb_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    rb_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+  }
+
+
   /**
    * Set the power of the elbow motor
    * @param power The power of the elbow motor

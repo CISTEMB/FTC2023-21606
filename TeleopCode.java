@@ -89,7 +89,7 @@ public class TeleopCode extends OpMode
         ARM_STATE_PICKUP,
         ARM_STATE_BACK,
         ARM_STATE_HOLD,
-        ARM_STATE_PRETUCK, // coach
+        ARM_STATE_PRETUCK,
         ARM_STATE_TUCK,
         ARM_STATE_ELBOW_HOLD,
         ARM_STATE_END, // Might not need, there for structure's sake
@@ -114,7 +114,8 @@ public class TeleopCode extends OpMode
     private static double ELBOW_MAX_SPEED = .75;
     private static double WRIST_TUCK = 0;  // reverse for old robot
     private static int ELBOW_TUCK = 0;
-    private static int ELBOW_PRETUCK = 200; // COACH
+    private static int ELBOW_PRETUCK = 150;
+    private static int PRETUCK_RANGE = 50;
     private static double WRIST_BACK = 0.22;   
     private static int ELBOW_BACK = 512;
     private static double WRIST_PICKUP = 0.8;
@@ -206,7 +207,7 @@ public class TeleopCode extends OpMode
             tuck_pos_btn_press = false;
         }
         tuck_pos_btn_old = tuck_pos_btn;
-        back_pos_btn = gamepad2.b;
+        back_pos_btn = (gamepad2.b && !gamepad2.start);
         if (!back_pos_btn_old && back_pos_btn) {
             back_pos_btn_press = true;
         } else {
@@ -250,7 +251,7 @@ public class TeleopCode extends OpMode
                     InitArmState = false;
                 } 
                 if (tuck_pos_btn) {
-                    newArmState(ArmState.ARM_STATE_TUCK);
+                    newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = robot.elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
@@ -278,7 +279,7 @@ public class TeleopCode extends OpMode
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 } else if(tuck_pos_btn_press){
-                    newArmState(ArmState.ARM_STATE_TUCK);
+                    newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else {
                     robot.elbow_motor.setTargetPosition(elbowHold);
                     wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
@@ -290,27 +291,28 @@ public class TeleopCode extends OpMode
                     gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
-                
-            case ARM_STATE_PRETUCK://{   COACH
-                telemetry.addData("Arm state", "PRE Tuck");
-                int tempe = robot.elbow_motor.getCurrentPosition();
+            
+            case ARM_STATE_PRETUCK:
+                telemetry.addData("Arm state", "PreTuck");
+                int elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitArmState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
                 }
-                if (
-                    ( tempe >(ELBOW_PRETUCK-20)) 
-                    &&
-                    (tempe < (ELBOW_PRETUCK+20))
-                    ) {
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                }  else if(back_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else if(pickup_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_PICKUP);
+                } else if (elbow > ELBOW_PRETUCK - PRETUCK_RANGE &&
+                           elbow < ELBOW_PRETUCK + PRETUCK_RANGE){
                     newArmState(ArmState.ARM_STATE_TUCK);
-                }  
-                else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_PRETUCK,  WRIST_PICKUP , .02);
+                } else {
+                    armControl (ELBOW_MAX_SPEED, ELBOW_PRETUCK,  wristPlace , 0);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
-                break;//}    
-                
+                break;//}
                 
             case ARM_STATE_TUCK://{
                 telemetry.addData("Arm state", "Tuck");
@@ -340,7 +342,7 @@ public class TeleopCode extends OpMode
                 if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else if(tuck_pos_btn_press){
-                    newArmState(ArmState.ARM_STATE_TUCK);
+                    newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 } else {
