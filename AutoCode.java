@@ -50,31 +50,13 @@ public class AutoCode extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
-    // Declare controller related variables(prev button presses, etc.) {
-  /*  private double turn_joy = 0;
-    private double drive_joy = 0;
-    
-    private double strafe_joy = 0;
-    
-    private double elbow_joy = 0;
-    private double wrist_joy = 0;
-    
-    private boolean pickup_pos_btn;
-    private boolean back_pos_btn;
-    private boolean tuck_pos_btn;
-    
-    private boolean grip_btn;*/
-    // }
     
     // Declare general global variables {
     private ElapsedTime runtime = new ElapsedTime();
     // }
-    
-    //boolean first=true;
-
-
-  
-
+    private double wristPlace = 0;
+    private int elbowHold = 0;
+    double waitTime;
     // State machine enums/variables {
     
     // Declare arm state machine enums and variables {
@@ -108,6 +90,12 @@ public class AutoCode extends OpMode
         INIT,
         CLEAR_TRUSS,
         FIND_LINE,
+        CENTER_PUSH_PROP,
+        CENTER_MOVE_BACK,
+        DROP_STEP1,
+        DROP_STEP2,
+        DROP_STEP3,
+        DROP_STEP4,
         END,
     };
     
@@ -122,8 +110,29 @@ public class AutoCode extends OpMode
     private double minReadingCenter = 65535;
     private boolean propLeft = false;
     private boolean propRight = false;
-    private boolean propMiddle = false;
+    private boolean propCenter = false;
     // }
+    
+    //todo move to robot class
+    private static double WRIST_TUCK = 0;  // reverse for old robot
+    private static int ELBOW_TUCK = 0;
+    private static int ELBOW_PRETUCK = 150;
+    private static int PRETUCK_RANGE = 50;
+    private static double WRIST_BACK = 0.22;   
+    private static int ELBOW_BACK = 512;
+    private static double WRIST_PICKUP = 0.8;
+    private static int ELBOW_PICKUP = 59;
+    private static double ELBOW_MAX_SPEED = .75;
+    
+    private static double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
+    private static double RIGHT_GRIP_DROP1 = 0.175;
+    private static double RIGHT_GRIP_OPEN = 0.25;
+    private static double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
+    private static double LEFT_GRIP_DROP1 = 0.685;
+    private static double LEFT_GRIP_OPEN = 0.6;
+    
+    
+    
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -135,7 +144,7 @@ public class AutoCode extends OpMode
             telemetry.addData("Status", "Initialization failed!");
             throw new RuntimeException("Initialization failed!");
         }
-        
+        robot.setWristPosition(wristPlace);
         // Initialize states for state machines {
         newDriveState(DriveState.INIT);
         //newArmState(ArmState.ARM_STATE_INIT);
@@ -162,131 +171,7 @@ public class AutoCode extends OpMode
      */
     @Override
     public void loop() {
-        
-      
-    
-        //sleep(300000);
-        
-        // Read controllers {
- /*       drive_joy = -gamepad1.left_stick_y;
-        turn_joy  =  gamepad1.left_stick_x;
-        strafe_joy = gamepad1.right_stick_x;
-        telemetry.addData("Drive Joysticks", "drive (%.2f), turn (%.2f), strafe (%.2f)", drive_joy, turn_joy, strafe_joy);
-        
-        elbow_joy = gamepad2.left_stick_y;
-        wrist_joy = gamepad2.right_stick_y;
-        telemetry.addData("Arm Joysticks", "arm (%.2f), wrist (%.2f)", elbow_joy, wrist_joy);
-        
-        pickup_pos_btn = gamepad2.y;
-        tuck_pos_btn = gamepad2.a;
-        back_pos_btn = gamepad2.b;
-        telemetry.addData("Pos Btns", "pu(y): " + pickup_pos_btn + ", tuck(a): " + tuck_pos_btn + ", back(b): " + back_pos_btn);
-        
-        if (gamepad2.right_trigger > .5 || gamepad1.right_trigger > .5) {
-            grip_btn = true;
-        } else {
-            grip_btn = false;
-        }
-        telemetry.addData("Grip  Button", grip_btn);*/
-        
-        // }
-        
-     /*   switch (CurrentArmState) {
-            case ARM_STATE_INIT://{
-                telemetry.addData("Arm state", "Init");
-                if (InitArmState) {
-                    robot.elbow_motor.setPower(0);
-                    
-                    InitArmState = false;
-                }
-                if (true) {
-                    newArmState(ArmState.ARM_STATE_TUCK);
-                }
-                break;//}
-            case ARM_STATE_PICKUP://{
-                telemetry.addData("Arm state", "Pickup");
-                if (InitArmState) {
-                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    InitArmState = false;
-                }
-                if (tuck_pos_btn) {
-                    newArmState(ArmState.ARM_STATE_TUCK);
-                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
-                    
-                    newArmState(ArmState.ARM_STATE_MANUAL);
-                } else {
-                    // elbow move 
-                    robot.elbow_motor.setTargetPosition(ELBOW_PICKUP);
-                    // servo move
-                    robot.setWristPosition(WRIST_PICKUP);
-                    
-                    /*
-                    robot.elbow_motor.setTargetPosition(elbowHold);
-                    wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
-                    wristPlace = Range.clip(wristPlace, 0, 1);
-                    robot.setWristPosition(wristPlace);
-                    telemetry.addData("Wrist location", wristPlace);
-                    
-                    gripperControl(grip_btn);
-                }
-                break;//}
-            case ARM_STATE_MANUAL://{
-                telemetry.addData("Arm state", "Manual");
-                if (InitArmState) {
-                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // TODO: Check if RUN_USING_ENCODER is correct or if we should use RUN_USING_ENCODERS
-                    InitArmState = false;
-                } 
-                if (tuck_pos_btn) {
-                    newArmState(ArmState.ARM_STATE_TUCK);
-                } else if (-0.01<elbow_joy && elbow_joy<0.01){
-                    elbowHold = robot.elbow_motor.getCurrentPosition();
-                    newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
-                } else {
-                    robot.setElbowPower(elbow_joy * robot.ELBOW_SENSITIVITY);
-                    wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
-                    wristPlace = Range.clip(wristPlace, 0, 1);
-                    robot.setWristPosition(wristPlace);
-                    
-                    gripperControl(grip_btn);
-                }
-                break;//}
-            case ARM_STATE_ELBOW_HOLD://{
-                telemetry.addData("Arm state", "Elbow Hold");
-                if (InitArmState) {
-                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    InitArmState = false;
-                }
-                if (tuck_pos_btn) {
-                    newArmState(ArmState.ARM_STATE_TUCK);
-                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
-                    newArmState(ArmState.ARM_STATE_MANUAL);
-                } else {
-                    robot.elbow_motor.setTargetPosition(elbowHold);
-                    wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
-                    wristPlace = Range.clip(wristPlace, 0, 1);
-                    robot.setWristPosition(wristPlace);
-                    telemetry.addData("Wrist location", wristPlace);
-                    telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
-                    
-                    gripperControl(grip_btn);
-                }
-                break;//}
-                
-            case ARM_STATE_TUCK://{
-                telemetry.addData("Arm state", "Tuck");
-                if (InitArmState) {
-                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    InitArmState = false;
-                }
-                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
-                    newArmState(ArmState.ARM_STATE_MANUAL);
-                } 
-                else {
-                    armControl (.25, elbowTuck,  wristTuck , .004);
-                    gripperControl(grip_btn);
-                }
-                break;//}
-         }*/
+         int elbow;
         
        switch (CurrentDriveState){
             case INIT:
@@ -310,7 +195,7 @@ public class AutoCode extends OpMode
                     speedDrive(.5);
                     InitDriveState = false;
                 } 
-                if (gotDistance (24)) {  // Time to leave
+                if (gotDistance (24, true)) {  // Time to leave
                     newDriveState(DriveState.FIND_LINE);
                 } else {  // Stick around
                     
@@ -321,14 +206,121 @@ public class AutoCode extends OpMode
                 telemetry.addData("Drive state","Find Line");
                 if (InitDriveState)  // Start Starting
                 {
-                    speedDrive(0); 
+                    speedDrive(.1); 
                     InitDriveState = false;
                 } else if (gotLine()) {  // Time to leave
+                    if (propCenter) {
+                        newDriveState(DriveState.CENTER_PUSH_PROP);
+                    }
+                    else {
+                        newDriveState(DriveState.END);
+                    }
+                } else if (gotDistance(1000, true)){ // todo make 40
                     newDriveState(DriveState.END);
-                } else {        // Stick around
+                }
+                else {        // Stick around
                     checkLowestDSensor();
                 }
                 break;
+                
+            case CENTER_PUSH_PROP:
+                telemetry.addData("Drive state", "Center Push Prop");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (4, true)) {  // Time to leave
+                    newDriveState(DriveState.CENTER_MOVE_BACK);
+                } else {  // Stick around
+                    
+                }
+                break;    
+                
+                
+            case CENTER_MOVE_BACK:
+                telemetry.addData("Drive state", "Center move back");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(-.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (-6, false)) {  // Time to leave
+                    speedDrive(0);
+                    newDriveState(DriveState.DROP_STEP1);
+                } else {  // Stick around
+                    
+                }
+                break;    
+        
+         case DROP_STEP1://{
+                telemetry.addData("Arm state", "Drop step 1");
+                 elbow = robot.elbow_motor.getCurrentPosition();
+                if (InitDriveState) {
+                     waitTime = DriveStateTime.milliseconds()+ 5000;
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (elbow > ELBOW_PICKUP - PRETUCK_RANGE &&
+                           elbow < ELBOW_PICKUP + PRETUCK_RANGE &&
+                    DriveStateTime.milliseconds() > waitTime) {
+                    newDriveState(DriveState.DROP_STEP2);
+                } else {
+                    armControl (ELBOW_MAX_SPEED, ELBOW_PICKUP, WRIST_PICKUP, .02);
+                }
+                break;//}
+        
+        case DROP_STEP2://{
+                telemetry.addData("Arm state", "Drop step 2");
+                elbow = robot.elbow_motor.getCurrentPosition();
+                if (InitDriveState) {
+                    waitTime = DriveStateTime.milliseconds()+ 5000;
+                    robot.setGripperPosition(LEFT_GRIP_OPEN, RIGHT_GRIP_OPEN);
+                    InitDriveState = false;
+                }
+                if (DriveStateTime.milliseconds() > waitTime) {
+                    newDriveState(DriveState.DROP_STEP3);
+                } else {
+                    
+                }
+                break;//}
+                
+             case DROP_STEP3://{
+                telemetry.addData("Arm state", "Drop step 3");
+                elbow = robot.elbow_motor.getCurrentPosition();
+                if (InitDriveState) {
+                    waitTime = DriveStateTime.milliseconds()+ 5000;
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (elbow > ELBOW_PRETUCK - PRETUCK_RANGE &&
+                           elbow < ELBOW_PRETUCK + PRETUCK_RANGE &&
+                    DriveStateTime.milliseconds() > waitTime) {
+                    newDriveState(DriveState.DROP_STEP4);
+                } else {
+                    armControl (ELBOW_MAX_SPEED, ELBOW_PRETUCK, wristPlace, .02);
+                }
+                break;//}
+                
+                 case DROP_STEP4://{
+                telemetry.addData("Arm state", "Drop step 4");
+                elbow = robot.elbow_motor.getCurrentPosition();
+                if (InitDriveState) {
+                    waitTime = DriveStateTime.milliseconds()+ 5000;
+                    robot.setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (elbow > ELBOW_TUCK - PRETUCK_RANGE &&
+                           elbow < ELBOW_TUCK + PRETUCK_RANGE &&
+                    DriveStateTime.milliseconds() > waitTime) {
+                    newDriveState(DriveState.END);
+                } else {
+                    armControl (ELBOW_MAX_SPEED, ELBOW_TUCK, WRIST_TUCK, .02);
+                }
+                break;//}
                 
             case END:
                 telemetry.addData("Drive state","END");
@@ -358,33 +350,7 @@ public class AutoCode extends OpMode
         InitDriveState = true;
     }
     
-  /*  private void newArmState(ArmState newState) {
-        ArmStateTime.reset();
-        CurrentArmState = newState;
-        InitArmState = true;
-    }
-    
-    private void gripperControl(boolean btn) {
-        robot.setGripperPosition(btn ? 1 : 0);
-    }
-    
-    private void armControl (double power, int elbow, double wrist, double wristStep) {
-          robot.setElbowPower(power);
-        robot.elbow_motor.setTargetPosition(elbow);
-                    
-        double currentWristPos=robot.wrist_servo.getPosition();
-                   
-        if  (-wristStep < wrist - currentWristPos && wrist - currentWristPos < wristStep) {
-            robot.setWristPosition(wrist);
-        } else if (currentWristPos < wrist) {
-            robot.setWristPosition(currentWristPos + wristStep);
-        } else  {
-            robot.setWristPosition(currentWristPos - wristStep);
-        }
-                    
-        telemetry.addData("Target Wrist location", wrist);
-        telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
-    }*/
+  
     
     private void distanceDrive (double power, double inches){
         int counts=(int)(inches*100);
@@ -424,16 +390,27 @@ public class AutoCode extends OpMode
         robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     
-    private boolean gotDistance (double inches){
+    private boolean gotDistance (double inches, boolean dirForward){
         int counts=(int)(inches*38);
-        if ((robot.lf_motor.getCurrentPosition() +
-             robot.rf_motor.getCurrentPosition() +
-             robot.lb_motor.getCurrentPosition() +
-             robot.rb_motor.getCurrentPosition())>= counts*4){
-                 return true;
-             }else{
-                 return false;
-             }
+        if (dirForward){
+            if ((robot.lf_motor.getCurrentPosition() +
+                 robot.rf_motor.getCurrentPosition() +
+                 robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())>= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
+        } else {
+            if ((robot.lf_motor.getCurrentPosition() +
+                 robot.rf_motor.getCurrentPosition() +
+                 robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())<= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
+        }
     }
     
     
@@ -466,9 +443,36 @@ public class AutoCode extends OpMode
         }
         if (minReadingLeft < minReadingRight && minReadingLeft < minReadingCenter) {
             propLeft = true;
+            propRight = false;
+            propCenter = false;
+        } else if (minReadingRight < minReadingLeft && minReadingRight < minReadingCenter) {
+            propRight = true;
+            propLeft = false;
+            propCenter = false;
+        } else {
+            propCenter = true;
+            propRight = false;
+            propLeft = false;
         }
         telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
+        telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
     }
     
- }
- 
+     private void armControl (double power, int elbow, double wrist, double wristStep) {
+          robot.setElbowPower(power);
+        robot.elbow_motor.setTargetPosition(elbow);
+                    
+        wristPlace=robot.wrist_servo.getPosition();
+                   
+        if  (-wristStep < wrist - wristPlace && wrist - wristPlace < wristStep) {
+            robot.setWristPosition(wrist);
+        } else if (wristPlace < wrist) {
+            robot.setWristPosition(wristPlace + wristStep);
+        } else  {
+            robot.setWristPosition(wristPlace - wristStep);
+        }
+                    
+        telemetry.addData("Target Wrist location", wrist);
+        telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
+    }
+    }
