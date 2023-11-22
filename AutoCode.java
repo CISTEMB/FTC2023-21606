@@ -44,7 +44,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@Autonomous(name="Auto Code", group="Practice")
+@Autonomous(name="Auto Code", group="Practice", preselectTeleOp="Teleop Code")
 
 public class AutoCode extends OpMode
 {
@@ -112,25 +112,6 @@ public class AutoCode extends OpMode
     private boolean propRight = false;
     private boolean propCenter = false;
     // }
-    
-    //todo move to robot class
-    private static double WRIST_TUCK = 0;  // reverse for old robot
-    private static int ELBOW_TUCK = 0;
-    private static int ELBOW_PRETUCK = 150;
-    private static int PRETUCK_RANGE = 50;
-    private static double WRIST_BACK = 0.22;   
-    private static int ELBOW_BACK = 512;
-    private static double WRIST_PICKUP = 0.8;
-    private static int ELBOW_PICKUP = 59;
-    private static double ELBOW_MAX_SPEED = .75;
-    
-    private static double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
-    private static double RIGHT_GRIP_DROP1 = 0.175;
-    private static double RIGHT_GRIP_OPEN = 0.25;
-    private static double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
-    private static double LEFT_GRIP_DROP1 = 0.685;
-    private static double LEFT_GRIP_OPEN = 0.6;
-    
     
     
     /*
@@ -263,12 +244,11 @@ public class AutoCode extends OpMode
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }
-                if (elbow > ELBOW_PICKUP - PRETUCK_RANGE &&
-                           elbow < ELBOW_PICKUP + PRETUCK_RANGE &&
+                if (robot.elbowWithinRange(robot.ELBOW_PICKUP) &&
                     DriveStateTime.milliseconds() > waitTime) {
                     newDriveState(DriveState.DROP_STEP2);
                 } else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_PICKUP, WRIST_PICKUP, .02);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .02);
                 }
                 break;//}
         
@@ -277,7 +257,7 @@ public class AutoCode extends OpMode
                 elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 5000;
-                    robot.setGripperPosition(LEFT_GRIP_OPEN, RIGHT_GRIP_OPEN);
+                    robot.setGripperPosition(robot.LEFT_GRIP_OPEN, robot.RIGHT_GRIP_OPEN);
                     InitDriveState = false;
                 }
                 if (DriveStateTime.milliseconds() > waitTime) {
@@ -295,12 +275,11 @@ public class AutoCode extends OpMode
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }
-                if (elbow > ELBOW_PRETUCK - PRETUCK_RANGE &&
-                           elbow < ELBOW_PRETUCK + PRETUCK_RANGE &&
+                if (robot.elbowWithinRange(robot.ELBOW_PRETUCK) &&
                     DriveStateTime.milliseconds() > waitTime) {
                     newDriveState(DriveState.DROP_STEP4);
                 } else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_PRETUCK, wristPlace, .02);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PRETUCK, wristPlace, .02);
                 }
                 break;//}
                 
@@ -309,16 +288,15 @@ public class AutoCode extends OpMode
                 elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 5000;
-                    robot.setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
+                    robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }
-                if (elbow > ELBOW_TUCK - PRETUCK_RANGE &&
-                           elbow < ELBOW_TUCK + PRETUCK_RANGE &&
+                if (elbowWithinRange(robot.ELBOW_TUCK) &&
                     DriveStateTime.milliseconds() > waitTime) {
                     newDriveState(DriveState.END);
                 } else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_TUCK, WRIST_TUCK, .02);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK, robot.WRIST_TUCK, .02);
                 }
                 break;//}
                 
@@ -378,6 +356,17 @@ public class AutoCode extends OpMode
         robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
+    private void speedStrafe (double speed){
+        robot.lf_motor.setPower(speed);
+        robot.rf_motor.setPower(-speed);
+        robot.lb_motor.setPower(speed);
+        robot.rb_motor.setPower(-speed);
+        robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
     
     private void stopDrive (){
         robot.lf_motor.setPower(0);
@@ -406,6 +395,29 @@ public class AutoCode extends OpMode
                  robot.rf_motor.getCurrentPosition() +
                  robot.lb_motor.getCurrentPosition() +
                  robot.rb_motor.getCurrentPosition())<= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
+        }
+    }
+
+    private boolean gotStrafeDistance (double inches, boolean dirForward){
+        int counts=(int)(inches*38);
+        if (dirForward){
+            if ((robot.lf_motor.getCurrentPosition() +
+                 -robot.rf_motor.getCurrentPosition() +
+                 robot.lb_motor.getCurrentPosition() +
+                 -robot.rb_motor.getCurrentPosition())>= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
+        } else {
+            if ((robot.lf_motor.getCurrentPosition() +
+                 -robot.rf_motor.getCurrentPosition() +
+                 robot.lb_motor.getCurrentPosition() +
+                 -robot.rb_motor.getCurrentPosition())<= counts*4){
                     return true;
                 }else{
                     return false;

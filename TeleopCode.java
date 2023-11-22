@@ -98,28 +98,10 @@ public class TeleopCode extends OpMode
     private ArmState CurrentArmState;
     private boolean InitArmState = false;
     private ElapsedTime ArmStateTime = new ElapsedTime();
-    
-    /////Gripper preset constants ///// {
-    private static double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
-    private static double RIGHT_GRIP_DROP1 = 0.175;
-    private static double RIGHT_GRIP_OPEN = 0.25;
-    private static double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
-    private static double LEFT_GRIP_DROP1 = 0.685;
-    private static double LEFT_GRIP_OPEN = 0.6;
-    //}
  
     /////Arm Preset Constants ////// {
     private double wristPlace = 0;
     private int elbowHold = 0;
-    private static double ELBOW_MAX_SPEED = .75;
-    private static double WRIST_TUCK = 0;  // reverse for old robot
-    private static int ELBOW_TUCK = 0;
-    private static int ELBOW_PRETUCK = 150;
-    private static int PRETUCK_RANGE = 50;
-    private static double WRIST_BACK = 0.22;   
-    private static int ELBOW_BACK = 512;
-    private static double WRIST_PICKUP = 0.8;
-    private static int ELBOW_PICKUP = 59;
     //}
     
     // }
@@ -305,11 +287,10 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PICKUP);
-                } else if (elbow > ELBOW_PRETUCK - PRETUCK_RANGE &&
-                           elbow < ELBOW_PRETUCK + PRETUCK_RANGE){
+                } else if (robot.elbowWithinRange(robot.ELBOW_PRETUCK)){
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_PRETUCK,  wristPlace , 0);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PRETUCK,  wristPlace , 0);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -328,7 +309,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 }
                 else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_TUCK,  WRIST_TUCK , .02);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , .02);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -346,7 +327,7 @@ public class TeleopCode extends OpMode
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 } else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_BACK, WRIST_BACK, .004);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_BACK, robot.WRIST_BACK, .004);
                     gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -364,7 +345,7 @@ public class TeleopCode extends OpMode
                 } else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else {
-                    armControl (ELBOW_MAX_SPEED, ELBOW_PICKUP, WRIST_PICKUP, .004);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .004);
                     gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -435,15 +416,15 @@ public class TeleopCode extends OpMode
     
     private void gripperControl(boolean wide_btn, boolean mid_btn) {
         if (mid_btn) {
-            robot.setGripperPosition(LEFT_GRIP_DROP1,RIGHT_GRIP_DROP1);
+            robot.setGripperPosition(robot.LEFT_GRIP_DROP1,robot.RIGHT_GRIP_DROP1);
             //robot.setGripperPosition(.75, .25);
             //robot.setGripperPosition(1,1);
             telemetry.addData ("GC", "mid");
         } else if (wide_btn) {
-            robot.setGripperPosition(LEFT_GRIP_OPEN, RIGHT_GRIP_OPEN);
+            robot.setGripperPosition(robot.LEFT_GRIP_OPEN, robot.RIGHT_GRIP_OPEN);
              telemetry.addData ("GC" ," wide");
         } else {
-            robot.setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
+            robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
              telemetry.addData ("GC" ," clodes");
         }
     }

@@ -80,6 +80,23 @@ public class RobotHardware
   public double ELBOW_SENSITIVITY = 0.5;
   public double SLOW_FACTOR = 0.2;
   public double GRIPPER_MID = 0.5;
+
+  public double WRIST_TUCK = 0;  // reverse for old robot
+  public int ELBOW_TUCK = 0;
+  public int ELBOW_PRETUCK = 150;
+  public int PRETUCK_RANGE = 50;
+  public double WRIST_BACK = 0.22;   
+  public int ELBOW_BACK = 512;
+  public double WRIST_PICKUP = 0.8;
+  public int ELBOW_PICKUP = 59;
+  public double ELBOW_MAX_SPEED = .75;
+  
+  public double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
+  public double RIGHT_GRIP_DROP1 = 0.175;
+  public double RIGHT_GRIP_OPEN = 0.25;
+  public double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
+  public double LEFT_GRIP_DROP1 = 0.685;
+  public double LEFT_GRIP_OPEN = 0.6;
   // }
   
   // declare constants for autonomous {
@@ -250,5 +267,11 @@ public class RobotHardware
 
     this.setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
     
+  }
+
+  public boolean elbowWithinRange(int target) {
+    int elbow = elbow_motor.getCurrentPosition();
+    return elbow > target - robot.PRETUCK_RANGE &&
+    elbow < target + robot.PRETUCK_RANGE;
   }
 }
