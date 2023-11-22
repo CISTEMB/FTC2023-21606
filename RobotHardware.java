@@ -84,11 +84,12 @@ public class RobotHardware
   public double WRIST_TUCK = 0;  // reverse for old robot
   public int ELBOW_TUCK = 0;
   public int ELBOW_PRETUCK = 150;
-  public int PRETUCK_RANGE = 50;
+  public int ELBOW_PREPICKUP = 180;
+  public int PRETUCK_RANGE = 10;
   public double WRIST_BACK = 0.22;   
   public int ELBOW_BACK = 512;
   public double WRIST_PICKUP = 0.8;
-  public int ELBOW_PICKUP = 59;
+  public int ELBOW_PICKUP = 30;
   public double ELBOW_MAX_SPEED = .75;
   
   public double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
@@ -173,6 +174,8 @@ public class RobotHardware
       elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      wrist_servo.setPosition(0);
+      setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
       
       launch_servo.setPosition(HOLD_DRONE);
 
@@ -271,7 +274,7 @@ public class RobotHardware
 
   public boolean elbowWithinRange(int target) {
     int elbow = elbow_motor.getCurrentPosition();
-    return elbow > target - robot.PRETUCK_RANGE &&
-    elbow < target + robot.PRETUCK_RANGE;
+    return elbow > target - PRETUCK_RANGE &&
+    elbow < target + PRETUCK_RANGE;
   }
 }

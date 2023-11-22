@@ -90,6 +90,7 @@ public class TeleopCode extends OpMode
         ARM_STATE_BACK,
         ARM_STATE_HOLD,
         ARM_STATE_PRETUCK,
+        ARM_STATE_PREPICKUP,
         ARM_STATE_TUCK,
         ARM_STATE_ELBOW_HOLD,
         ARM_STATE_END, // Might not need, there for structure's sake
@@ -234,6 +235,8 @@ public class TeleopCode extends OpMode
                 } 
                 if (tuck_pos_btn) {
                     newArmState(ArmState.ARM_STATE_PRETUCK);
+                } else if (pickup_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
                 } else if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = robot.elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
@@ -259,7 +262,7 @@ public class TeleopCode extends OpMode
                 }   else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else if(pickup_pos_btn_press){
-                    newArmState(ArmState.ARM_STATE_PICKUP);
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
                 } else if(tuck_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else {
@@ -276,7 +279,6 @@ public class TeleopCode extends OpMode
             
             case ARM_STATE_PRETUCK:
                 telemetry.addData("Arm state", "PreTuck");
-                int elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitArmState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
@@ -286,11 +288,31 @@ public class TeleopCode extends OpMode
                 }  else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else if(pickup_pos_btn_press){
-                    newArmState(ArmState.ARM_STATE_PICKUP);
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
                 } else if (robot.elbowWithinRange(robot.ELBOW_PRETUCK)){
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PRETUCK,  wristPlace , 0);
+                    //gripperControl(grip_wide_btn, grip_mid_btn);
+                }
+                break;//}
+                
+            case ARM_STATE_PREPICKUP:
+                telemetry.addData("Arm state", "PrePickup");
+                if (InitArmState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                }
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                }  else if(back_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else if(tuck_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_PRETUCK);
+                } else if (robot.elbowWithinRange(robot.ELBOW_PREPICKUP)){
+                    newArmState(ArmState.ARM_STATE_PICKUP);
+                } else {
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -306,7 +328,7 @@ public class TeleopCode extends OpMode
                 }  else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else if(pickup_pos_btn_press){
-                    newArmState(ArmState.ARM_STATE_PICKUP);
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
                 }
                 else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , .02);
@@ -325,7 +347,7 @@ public class TeleopCode extends OpMode
                 } else if(tuck_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else if(pickup_pos_btn_press){
-                    newArmState(ArmState.ARM_STATE_PICKUP);
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_BACK, robot.WRIST_BACK, .004);
                     gripperControl(grip_wide_btn, grip_mid_btn);
@@ -333,7 +355,7 @@ public class TeleopCode extends OpMode
                 break;//}
             
             case ARM_STATE_PICKUP://{
-                telemetry.addData("Arm state", "Back");
+                telemetry.addData("Arm state", "Pickup");
                 if (InitArmState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitArmState = false;
@@ -345,7 +367,7 @@ public class TeleopCode extends OpMode
                 } else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .004);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .1);
                     gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -430,8 +452,6 @@ public class TeleopCode extends OpMode
     }
     
     private void armControl (double power, int elbow, double wrist, double wristStep) {
-          robot.setElbowPower(power);
-        robot.elbow_motor.setTargetPosition(elbow);
                     
         wristPlace=robot.wrist_servo.getPosition();
                    
@@ -442,6 +462,8 @@ public class TeleopCode extends OpMode
         } else  {
             robot.setWristPosition(wristPlace - wristStep);
         }
+        robot.setElbowPower(power);
+        robot.elbow_motor.setTargetPosition(elbow);
                     
         telemetry.addData("Target Wrist location", wrist);
         telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
