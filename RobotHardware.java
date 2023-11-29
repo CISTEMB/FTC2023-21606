@@ -91,6 +91,7 @@ public class RobotHardware
   public double WRIST_PICKUP = 0.8;
   public int ELBOW_PICKUP = 30;
   public double ELBOW_MAX_SPEED = .75;
+  public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
   public double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
   public double RIGHT_GRIP_DROP1 = 0.175;
@@ -208,6 +209,20 @@ public class RobotHardware
     rf_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     lb_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     rb_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+  }
+  
+  public void setDriveMode(DcMotor.RunMode mode) {
+    lf_motor.setMode(mode);
+    rf_motor.setMode(mode);
+    lb_motor.setMode(mode);
+    rb_motor.setMode(mode);
+  }
+  
+  public void setDrivePosition(int countslf, int countsrf, int countslb, int countsrb) {
+    lf_motor.setTargetPosition(countslf);
+    rf_motor.setTargetPosition(countsrf);
+    lb_motor.setTargetPosition(countslb);
+    rb_motor.setTargetPosition(countsrb);
   }
 
 

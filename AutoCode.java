@@ -56,7 +56,11 @@ public class AutoCode extends OpMode
     // }
     private double wristPlace = 0;
     private int elbowHold = 0;
-    double waitTime;
+    private double waitTime;
+    
+    private boolean parkRight = false;
+    private boolean parkLeft = false;
+    private boolean parkFrozen = false;
     // State machine enums/variables {
     
     // Declare arm state machine enums and variables {
@@ -101,6 +105,8 @@ public class AutoCode extends OpMode
         DROP_STEP3,
         DROP_STEP4,
         DROP_STEP0_PREPICKUP,
+        PARK_RIGHT,
+        PARK_LEFT,
         END,
     };
     
@@ -142,6 +148,23 @@ public class AutoCode extends OpMode
      */
     @Override
     public void init_loop() {
+        if(gamepad1.b && !parkFrozen) {
+            parkRight = true;
+            parkLeft = false;
+        }
+        if(gamepad1.x && !parkFrozen) {
+            parkRight = false;
+            parkLeft = true;
+        }
+        if(gamepad1.a && !parkFrozen) {
+            parkRight = false;
+            parkLeft = false;
+        }
+        if(gamepad1.guide) {
+            parkFrozen = !parkFrozen;
+        }
+        telemetry.addData("parkState","parkRight: " + parkRight + " parkLeft: " + parkLeft + " parkFrozen: " + parkFrozen);
+        telemetry.update();
     }
 
     /*
@@ -205,7 +228,7 @@ public class AutoCode extends OpMode
                     else {
                         newDriveState(DriveState.END);
                     }
-                } else if (gotDistance(1000, true)){ // todo make 40
+                } else if (gotDistance(55, true)){
                     newDriveState(DriveState.END);
                 }
                 else {        // Stick around
@@ -253,7 +276,7 @@ public class AutoCode extends OpMode
                     speedDrive(-.1);
                     InitDriveState = false;
                 } 
-                if (gotDistance (-4, false)) {  // Time to leave
+                if (gotDistance (-9, false)) {  // Time to leave
                     speedDrive(0);
                     newDriveState(DriveState.LEFT_STRAFE_TO_LINE);
                 } else {  // Stick around
@@ -264,15 +287,16 @@ public class AutoCode extends OpMode
                 telemetry.addData("Drive state","Find Line");
                 if (InitDriveState)  // Start Starting
                 {
+                    robot.resetDriveEncoders();
                     speedStrafe(-.05); 
                     InitDriveState = false;
                 } else if (gotLine()) {  // Time to leave
                         stopDrive();
                         newDriveState(DriveState.DROP_STEP0_PREPICKUP);
                     
-                } //else if (gotDistance(1000, true)){ // todo make 40
-                    //newDriveState(DriveState.END);
-                //}
+                } else if (gotStrafeDistance(-10, false)){ // todo make 40
+                    newDriveState(DriveState.END);
+                }
                 else {        // Stick around
                 }
                 break;
@@ -285,7 +309,7 @@ public class AutoCode extends OpMode
                     speedDrive(-.1);
                     InitDriveState = false;
                 } 
-                if (gotDistance (-8, false)) {  // Time to leave
+                if (gotDistance (-9, false)) {  // Time to leave
                     speedDrive(0);
                     newDriveState(DriveState.RIGHT_STRAFE_TO_LINE);
                 } else {  // Stick around
@@ -296,16 +320,17 @@ public class AutoCode extends OpMode
         case RIGHT_STRAFE_TO_LINE:
                 telemetry.addData("Drive state","Find Line");
                 if (InitDriveState)  // Start Starting
-                {
+                {   
+                    robot.resetDriveEncoders();
                     speedStrafe(.05); 
                     InitDriveState = false;
                 } else if (gotLine()) {  // Time to leave
                         stopDrive();
                         newDriveState(DriveState.DROP_STEP0_PREPICKUP);
                     
-                } //else if (gotDistance(1000, true)){ // todo make 40
-                    //newDriveState(DriveState.END);
-                //}
+                } else if (gotStrafeDistance(10, true)){ 
+                    newDriveState(DriveState.END);
+                }
                 else {        // Stick around
                 }
                 break;
@@ -314,7 +339,7 @@ public class AutoCode extends OpMode
                 telemetry.addData("Arm state", "Drop step 1");
                  elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitDriveState) {
-                     waitTime = DriveStateTime.milliseconds()+ 5000;
+                     waitTime = DriveStateTime.milliseconds()+ 1000;
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }
@@ -344,7 +369,7 @@ public class AutoCode extends OpMode
                 telemetry.addData("Arm state", "Drop step 2");
                 elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitDriveState) {
-                    waitTime = DriveStateTime.milliseconds()+ 5000;
+                    waitTime = DriveStateTime.milliseconds()+ 1000;
                     robot.setGripperPosition(robot.LEFT_GRIP_OPEN, robot.RIGHT_GRIP_OPEN);
                     InitDriveState = false;
                 }
@@ -359,7 +384,7 @@ public class AutoCode extends OpMode
                 telemetry.addData("Arm state", "Drop step 3");
                 elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitDriveState) {
-                    waitTime = DriveStateTime.milliseconds()+ 5000;
+                    waitTime = DriveStateTime.milliseconds()+ 1000;
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }
@@ -375,18 +400,52 @@ public class AutoCode extends OpMode
                 telemetry.addData("Arm state", "Drop step 4");
                 elbow = robot.elbow_motor.getCurrentPosition();
                 if (InitDriveState) {
-                    waitTime = DriveStateTime.milliseconds()+ 5000;
+                    waitTime = DriveStateTime.milliseconds()+ 1000;
                     robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }
                 if (robot.elbowWithinRange(robot.ELBOW_TUCK) &&
                     DriveStateTime.milliseconds() > waitTime) {
-                    newDriveState(DriveState.END);
+                    if(parkRight){
+                        newDriveState(DriveState.PARK_RIGHT);
+                    } else if(parkLeft){
+                        newDriveState(DriveState.PARK_LEFT);
+                    } else{
+                        newDriveState(DriveState.END);  
+                    }
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK, robot.WRIST_TUCK, .02);
                 }
                 break;//}
+            
+            case PARK_RIGHT:
+                telemetry.addData("Drive state","Park Right");
+                if (InitDriveState)  // Start Starting
+                {   
+                    robot.resetDriveEncoders();
+                    speedStrafe(.1); 
+                    InitDriveState = false;
+                } else if (gotStrafeDistance(50, true) || robot.rightd_sensor.getDistance(DistanceUnit.INCH)<=3){ 
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                }
+                break;
+                
+            case PARK_LEFT:
+                telemetry.addData("Drive state","Park Left");
+                if (InitDriveState)  // Start Starting
+                {   
+                    robot.resetDriveEncoders();
+                    speedStrafe(-.1); 
+                    InitDriveState = false;
+                } else if (gotStrafeDistance(-50, false) || robot.leftd_sensor.getDistance(DistanceUnit.INCH)<=3){ 
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                }
+                break;
                 
             case END:
                 telemetry.addData("Drive state","END");
@@ -490,13 +549,13 @@ public class AutoCode extends OpMode
         }
     }
 
-    private boolean gotStrafeDistance (double inches, boolean dirForward){
-        int counts=(int)(inches*38);
-        if (dirForward){
+    private boolean gotStrafeDistance (double inches, boolean dirRight){
+        int counts=(int)(inches*67);
+        if (dirRight){
             if ((robot.lf_motor.getCurrentPosition() +
                  -robot.rf_motor.getCurrentPosition() +
-                 robot.lb_motor.getCurrentPosition() +
-                 -robot.rb_motor.getCurrentPosition())>= counts*4){
+                 -robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())>= counts*4){
                     return true;
                 }else{
                     return false;
@@ -504,8 +563,8 @@ public class AutoCode extends OpMode
         } else {
             if ((robot.lf_motor.getCurrentPosition() +
                  -robot.rf_motor.getCurrentPosition() +
-                 robot.lb_motor.getCurrentPosition() +
-                 -robot.rb_motor.getCurrentPosition())<= counts*4){
+                 -robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())<= counts*4){
                     return true;
                 }else{
                     return false;

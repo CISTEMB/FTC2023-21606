@@ -41,7 +41,7 @@ import org.firstinspires.ftc.teamcode.RobotHardware;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@TeleOp(name="Teleop Code", group="Practice")
+@TeleOp(name="Teleop Code", group="TeleOps")
 
 public class TeleopCode extends OpMode
 {
@@ -64,6 +64,9 @@ public class TeleopCode extends OpMode
     private boolean tuck_pos_btn;
     private boolean tuck_pos_btn_old = false;
     private boolean tuck_pos_btn_press = false;
+    private boolean reset_btn;
+    private boolean reset_btn_old = false;
+    private boolean reset_btn_press = false;
     
     private boolean grip_wide_btn;
     private boolean grip_mid_btn;
@@ -176,14 +179,21 @@ public class TeleopCode extends OpMode
         wrist_joy = gamepad2.right_stick_y;
         telemetry.addData("Arm Joysticks", "arm (%.2f), wrist (%.2f)", elbow_joy, wrist_joy);
         
-        pickup_pos_btn = gamepad2.y;
+        pickup_pos_btn = gamepad2.a;
         if (!pickup_pos_btn_old && pickup_pos_btn) {
             pickup_pos_btn_press = true;
         } else {
             pickup_pos_btn_press = false;
         }
         pickup_pos_btn_old = pickup_pos_btn;
-        tuck_pos_btn = gamepad2.a;
+        reset_btn = gamepad2.dpad_down;
+        if (!reset_btn_old && reset_btn) {
+            reset_btn_press = true;
+        } else {
+            reset_btn_press = false;
+        }
+        reset_btn_old = reset_btn;
+        tuck_pos_btn = gamepad2.y;
         if (!tuck_pos_btn_old && tuck_pos_btn) {
             tuck_pos_btn_press = true;
         } else {
@@ -240,7 +250,10 @@ public class TeleopCode extends OpMode
                 } else if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = robot.elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
-                } else {
+                } else if (reset_btn_press) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    InitArmState = true; // Probably bad practice, but oh well
+                }else {
                     robot.setElbowPower(elbow_joy * robot.ELBOW_SENSITIVITY);
                     wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
@@ -292,7 +305,7 @@ public class TeleopCode extends OpMode
                 } else if (robot.elbowWithinRange(robot.ELBOW_PRETUCK)){
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PRETUCK,  wristPlace , 0);
+                    armControl (robot.ELBOW_PRETUCK_MAX_SPEED, robot.ELBOW_PRETUCK,  wristPlace , 0);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
@@ -312,7 +325,7 @@ public class TeleopCode extends OpMode
                 } else if (robot.elbowWithinRange(robot.ELBOW_PREPICKUP)){
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
+                    armControl (robot.ELBOW_PRETUCK_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
                 break;//}
