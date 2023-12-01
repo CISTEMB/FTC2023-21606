@@ -458,6 +458,8 @@ public class AutoCode extends OpMode
         
 
         // Show the elapsed game time and wheel power.
+        telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
+        telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.update();
     }
@@ -590,21 +592,17 @@ public class AutoCode extends OpMode
     private void checkLowestDSensor() {
         double tempL = robot.leftd_sensor.getDistance(DistanceUnit.INCH);
         double tempR = robot.rightd_sensor.getDistance(DistanceUnit.INCH);
-        double tempC = robot.centerd_sensor.getDistance(DistanceUnit.INCH);
         if (tempL < minReadingLeft) {
             minReadingLeft = tempL;
         }
         if (tempR < minReadingRight) {
             minReadingRight = tempR;
         }
-        if (tempC < minReadingCenter) {
-            minReadingCenter = tempC;
-        }
-        if (minReadingLeft < minReadingRight && minReadingLeft < minReadingCenter) {
+        if (minReadingLeft < minReadingRight && minReadingLeft < 10) {
             propLeft = true;
             propRight = false;
             propCenter = false;
-        } else if (minReadingRight < minReadingLeft && minReadingRight < minReadingCenter) {
+        } else if (minReadingRight < minReadingLeft && minReadingRight < 10) {
             propRight = true;
             propLeft = false;
             propCenter = false;
@@ -613,8 +611,8 @@ public class AutoCode extends OpMode
             propRight = false;
             propLeft = false;
         }
-        telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
-        telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
+        
+        
     }
     
      private void armControl (double power, int elbow, double wrist, double wristStep) {

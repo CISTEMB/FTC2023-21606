@@ -84,7 +84,7 @@ public class RobotHardware
   public double WRIST_TUCK = 0;  // reverse for old robot
   public int ELBOW_TUCK = 0;
   public int ELBOW_PRETUCK = 150;
-  public int ELBOW_PREPICKUP = 180;
+  public int ELBOW_PREPICKUP = 190;
   public int PRETUCK_RANGE = 10;
   public double WRIST_BACK = 0.22;   
   public int ELBOW_BACK = 512;
@@ -157,8 +157,8 @@ public class RobotHardware
       rf_motor.setDirection(DcMotor.Direction.FORWARD);
       /*lb_motor.setDirection(DcMotor.Direction.REVERSE);
       rb_motor.setDirection(DcMotor.Direction.FORWARD);*/ // Uncomment these for testing on old robot
-      lb_motor.setDirection(DcMotor.Direction.FORWARD);
-      rb_motor.setDirection(DcMotor.Direction.REVERSE);
+      lb_motor.setDirection(DcMotor.Direction.FORWARD); // And comment...
+      rb_motor.setDirection(DcMotor.Direction.REVERSE); // ...these for testing on old robot
       elbow_motor.setDirection(DcMotor.Direction.FORWARD);
       
       lf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
