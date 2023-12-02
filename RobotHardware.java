@@ -86,9 +86,9 @@ public class RobotHardware
   public int ELBOW_PRETUCK = 150;
   public int ELBOW_PREPICKUP = 190;
   public int PRETUCK_RANGE = 10;
-  public double WRIST_BACK = 0.22;   
-  public int ELBOW_BACK = 512;
-  public double WRIST_PICKUP = 0.8;
+  public double WRIST_BACK = 0.4;   
+  public int ELBOW_BACK = 508;
+  public double WRIST_PICKUP = 1;
   public int ELBOW_PICKUP = 30;
   public double ELBOW_MAX_SPEED = .75;
   public double ELBOW_PRETUCK_MAX_SPEED = 1;

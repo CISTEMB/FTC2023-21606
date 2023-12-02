@@ -186,7 +186,7 @@ public class TeleopCode extends OpMode
             pickup_pos_btn_press = false;
         }
         pickup_pos_btn_old = pickup_pos_btn;
-        reset_btn = gamepad2.dpad_down;
+        reset_btn = gamepad2.left_bumper;
         if (!reset_btn_old && reset_btn) {
             reset_btn_press = true;
         } else {
