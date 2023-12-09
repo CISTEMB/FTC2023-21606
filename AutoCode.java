@@ -112,6 +112,7 @@ public class AutoCode extends OpMode
         PARK_RIGHT,
         PARK_LEFT,
         END,
+        TEST_TURN
     };
     
     private DriveState CurrentDriveState;
@@ -196,10 +197,20 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } 
                 if (true) { // Because we not want to immedatly start
-                    newDriveState(DriveState.CLEAR_TRUSS);
+                    newDriveState(DriveState.TEST_TURN);
                 }
                 break;
-                
+            case TEST_TURN:
+                telemetry.addData("Drive state", "Test turn");
+                if (InitDriveState) {
+                    turn(0.5,-0.5);
+                    InitDriveState = false;
+                }
+                if (gotAngle(45,false)) {
+                    robot.setDrivePower(0,0,0,0);
+                    newDriveState(DriveState.END);
+                }
+                break;
             case CLEAR_TRUSS:
                 telemetry.addData("Drive state", "Clearing Truss");
                 if (InitDriveState)
@@ -579,13 +590,16 @@ public class AutoCode extends OpMode
     }
     
     private boolean gotAngle(float degrees, boolean clockwise) {
-        Orientation orientation = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-        float heading = orientation.thirdAngle;
+        float heading = (float)robot.readIMU();
         if (clockwise) {
             return (heading <= degrees);
         } else {
             return (heading >= degrees);
         }
+    }
+
+    private void turn(double leftSpeed, double rightSpeed) {
+        robot.setDrivePower(leftSpeed, rightSpeed, leftSpeed, rightSpeed);
     }
     
     

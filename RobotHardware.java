@@ -77,6 +77,7 @@ public class RobotHardware
   // Declare IMU stuff {
   public Orientation angles;
   public Acceleration gravity;
+  public double IMUOffset = 0;
   // }
 
   // Declare internal variables(initialization status, errors, etc.) {
@@ -174,13 +175,15 @@ public class RobotHardware
       BNO055IMU.Parameters IMUParameters = new BNO055IMU.Parameters();
         IMUParameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         IMUParameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        IMUParameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample OpMode
         IMUParameters.loggingEnabled      = true;
         IMUParameters.loggingTag          = "IMU";
         IMUParameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         
       imu = hardwareMap.get(BNO055IMU.class, "IMU");
       imu.initialize(IMUParameters);
+      Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+      float heading = orientation.thirdAngle;
+      IMUOffset = -heading;
       
       composeIMUTelemetry();
       
@@ -355,7 +358,7 @@ public class RobotHardware
         telemetry.addLine()
             .addData("heading", new Func<String>() {
                 @Override public String value() {
-                    return formatAngle(angles.angleUnit, angles.firstAngle);
+                    return formatAngle(angles.angleUnit, angles.firstAngle-IMUOffset);
                     }
                 })
             .addData("roll", new Func<String>() {
@@ -391,5 +394,16 @@ public class RobotHardware
 
     String formatDegrees(double degrees){
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+    
+    public double readIMU() {
+      Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+      return orientation.thirdAngle-IMUOffset;
+    }
+    
+    public void resetIMU() {
+      Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+      float heading = orientation.thirdAngle;
+      IMUOffset = -heading;
     }
 }
