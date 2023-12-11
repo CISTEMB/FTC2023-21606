@@ -30,6 +30,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import java.util.Locale;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import java.util.Map;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -41,7 +47,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.hardware.bosch.BNO055IMU;
+/*import com.qualcomm.hardware.bosch.BNO055IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -52,7 +58,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import org.firstinspires.ftc.robotcore.external.Func;
 
+
+
 import java.util.Locale;
+*/
+import com.qualcomm.robotcore.hardware.IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class RobotHardware
 {
@@ -70,13 +83,17 @@ public class RobotHardware
   public DistanceSensor leftd_sensor = null;
   public DistanceSensor rightd_sensor = null;
   public DistanceSensor centerd_sensor = null;
-  public BNO055IMU imu = null;
+  //public BNO055IMU imu = null;
+  public IMU imu = null;
   // }
   
   // Declare IMU stuff {
-  public Orientation angles;
-  public Acceleration gravity;
-  public double IMUOffset = 0;
+  //public Orientation angles;
+  //public Acceleration gravity;
+  //public double IMUOffset = 0;
+  public YawPitchRollAngles orientation;
+  public double lastAngle;
+  public double Angle;
   // }
 
   // Declare internal variables(initialization status, errors, etc.) {
@@ -183,23 +200,8 @@ public class RobotHardware
       leftd_sensor = hardwareMap.get(DistanceSensor.class, "LEFTD_SENSOR");
       rightd_sensor = hardwareMap.get(DistanceSensor.class, "RIGHTD_SENSOR");
       centerd_sensor = hardwareMap.get(DistanceSensor.class, "CENTERD_SENSOR");
+      imu = hardwareMap.get(IMU.class, "IMU");
       
-      // Setup IMU object
-      BNO055IMU.Parameters IMUParameters = new BNO055IMU.Parameters();
-        IMUParameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        IMUParameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        IMUParameters.loggingEnabled      = true;
-        IMUParameters.loggingTag          = "IMU";
-        IMUParameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        
-      imu = hardwareMap.get(BNO055IMU.class, "IMU");
-      imu.initialize(IMUParameters);
-      Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-      float heading = orientation.thirdAngle;
-      IMUOffset = -heading;
-      composeIMUTelemetry();
-      imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
-
       // Configure motors
       lf_motor.setDirection(DcMotor.Direction.REVERSE);
       rf_motor.setDirection(DcMotor.Direction.FORWARD);
@@ -226,6 +228,13 @@ public class RobotHardware
       setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
       
       launch_servo.setPosition(HOLD_DRONE);
+
+      // Configure IMU
+      RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+      RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+      RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+      imu.initialize(new IMU.Parameters(orientationOnRobot));
+      resetIMU();
 
       telemetry.addData("RobotHardware","Initialized successfully!");
       initialized = true;
@@ -339,6 +348,7 @@ public class RobotHardware
     elbow < target + PRETUCK_RANGE;
   }
   
+  /*
   void composeIMUTelemetry() {
 
         // At the beginning of each telemetry update, grab a bunch of data
@@ -397,23 +407,35 @@ public class RobotHardware
                     }
                 });
     }
+    */
     
-    String formatAngle(AngleUnit angleUnit, double angle) {
-        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
-    }
+  
+  public void resetIMU() {
+     imu.resetYaw();
+  }
+  
+  public double getAngle()
+    {
+        // We experimentally determined the Z axis is the axis we want to use for heading angle.
+        // We have to process the angle because the imu works in euler angles so the Z axis is
+        // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
+        // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
 
-    String formatDegrees(double degrees){
-        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+        orientation = imu.getRobotYawPitchRollAngles();
+        double currAngle = orientation.getYaw(AngleUnit.DEGREES);
+
+        double deltaAngle = currAngle - lastAngle;
+
+        if (deltaAngle < -180)
+            deltaAngle += 360;
+        else if (deltaAngle > 180)
+            deltaAngle -= 360;
+
+        Angle += deltaAngle;
+
+        lastAngle = currAngle;
+
+        return Angle;
     }
     
-    public double readIMU() {
-      Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-      return orientation.thirdAngle-IMUOffset;
-    }
-    
-    public void resetIMU() {
-      Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-      float heading = orientation.thirdAngle;
-      IMUOffset = -heading;
-    }
 }

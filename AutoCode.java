@@ -178,7 +178,7 @@ public class AutoCode extends OpMode
                     turn(0.5,-0.5);
                     InitDriveState = false;
                 }
-                if (gotAngle(45,false)) {
+                if (gotAngle(-45,true)) {
                     robot.setDrivePower(0,0,0,0);
                     newDriveState(DriveState.END);
                 }
@@ -441,6 +441,7 @@ public class AutoCode extends OpMode
         }
         
         // Telemetry Update.
+        telemetry.addData("Angle", robot.getAngle());
         telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
         telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
         telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -539,10 +540,10 @@ public class AutoCode extends OpMode
         }
     }
     
-    private boolean gotAngle(float degrees, boolean clockwise) {
-        float heading = (float)robot.readIMU();
+    private boolean gotAngle(double degrees, boolean clockwise) {
+        double heading = robot.getAngle();
         if (clockwise) {
-            return (heading <= degrees);
+           return (heading <= degrees);
         } else {
             return (heading >= degrees);
         }
