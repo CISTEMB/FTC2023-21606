@@ -71,7 +71,6 @@ public class RobotHardware
   public DistanceSensor rightd_sensor = null;
   public DistanceSensor centerd_sensor = null;
   public BNO055IMU imu = null;
-  
   // }
   
   // Declare IMU stuff {
@@ -90,37 +89,48 @@ public class RobotHardware
   private Telemetry telemetry = null;
   // }
 
-  // Declare "constants" that can be changed by the host class {
+  // Declare "constants" that can be changed by the host class
+  // Drive control constants {
   public double MAX_MOTOR_POWER = 1.0;
   public double TURN_SENSITIVITY = 0.5;
   public double DRIVE_SENSITIVITY = 0.75;
   public double STRAFE_SENSITIVITY = 0.75;
-  public double WRIST_SENSITIVITY = 0.001;
-  public double ELBOW_SENSITIVITY = 0.5;
   public double SLOW_FACTOR = 0.2;
-  public double GRIPPER_MID = 0.5;
-
-  public double WRIST_TUCK = 0;  // reverse for old robot
-  public int ELBOW_TUCK = 0;
-  public int ELBOW_PRETUCK = 150;
-  public int ELBOW_PREPICKUP = 190;
-  public int PRETUCK_RANGE = 10;
-  public double WRIST_BACK = 0.4;   
-  public int ELBOW_BACK = 508;
-  public double WRIST_PICKUP = 1;
-  public int ELBOW_PICKUP = 30;
-  public double ELBOW_MAX_SPEED = .75;
-  public double ELBOW_PRETUCK_MAX_SPEED = 1;
+  //}
   
+  // Elbow and Wrist control constants {
+  public double WRIST_SENSITIVITY = 0.001;  
+  public double ELBOW_SENSITIVITY = 0.5;
+  public double ELBOW_MAX_SPEED = .75;
+  //}
+
+  // Gripper servo position settings {
   public double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
   public double RIGHT_GRIP_DROP1 = 0.175;
   public double RIGHT_GRIP_OPEN = 0.25;
   public double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
   public double LEFT_GRIP_DROP1 = 0.685;
   public double LEFT_GRIP_OPEN = 0.6;
-  // }
+  //}
   
-  // declare constants for autonomous {
+  // Arm and wrist presets {
+  public int ELBOW_PRETUCK = 150;
+  public int PRETUCK_RANGE = 10;
+  public double ELBOW_PRETUCK_MAX_SPEED = 1;
+  
+  public double WRIST_TUCK = 0; 
+  public int ELBOW_TUCK = 0;
+  
+  public int ELBOW_PREPICKUP = 190;
+  
+  public double WRIST_PICKUP = 1;
+  public int ELBOW_PICKUP = 30;
+  
+  public double WRIST_BACK = 0.4;   
+  public int ELBOW_BACK = 508;
+  //}
+  
+  // declare constants for line detection {
   public int RED_LIMIT = 700;
   public int BLUE_LIMIT = 1500;
   // }
@@ -158,6 +168,8 @@ public class RobotHardware
         opmode.telemetry.addData("RobotHardware","Error: hardwareMap has been incorrectly defined! Have you configured your robot?");
         return false;
       }
+      
+      // Setup drive hardware objects
       lf_motor = hardwareMap.get(DcMotor.class, "LF_MOTOR");
       rf_motor = hardwareMap.get(DcMotor.class, "RF_MOTOR");
       lb_motor = hardwareMap.get(DcMotor.class, "LB_MOTOR");
@@ -172,6 +184,7 @@ public class RobotHardware
       rightd_sensor = hardwareMap.get(DistanceSensor.class, "RIGHTD_SENSOR");
       centerd_sensor = hardwareMap.get(DistanceSensor.class, "CENTERD_SENSOR");
       
+      // Setup IMU object
       BNO055IMU.Parameters IMUParameters = new BNO055IMU.Parameters();
         IMUParameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         IMUParameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -184,17 +197,14 @@ public class RobotHardware
       Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
       float heading = orientation.thirdAngle;
       IMUOffset = -heading;
-      
       composeIMUTelemetry();
-      
       imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
+      // Configure motors
       lf_motor.setDirection(DcMotor.Direction.REVERSE);
       rf_motor.setDirection(DcMotor.Direction.FORWARD);
-      /*lb_motor.setDirection(DcMotor.Direction.REVERSE);
-      rb_motor.setDirection(DcMotor.Direction.FORWARD);*/ // Uncomment these for testing on old robot
-      lb_motor.setDirection(DcMotor.Direction.FORWARD); // And comment...
-      rb_motor.setDirection(DcMotor.Direction.REVERSE); // ...these for testing on old robot
+      lb_motor.setDirection(DcMotor.Direction.FORWARD); 
+      rb_motor.setDirection(DcMotor.Direction.REVERSE);
       elbow_motor.setDirection(DcMotor.Direction.FORWARD);
       
       lf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -203,7 +213,6 @@ public class RobotHardware
       rb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       elbow_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       
-      
       lf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       rf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       lb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -211,6 +220,8 @@ public class RobotHardware
       elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      
+      // Configure Servos
       wrist_servo.setPosition(0);
       setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
       
@@ -260,7 +271,6 @@ public class RobotHardware
     lb_motor.setTargetPosition(countslb);
     rb_motor.setTargetPosition(countsrb);
   }
-
 
   /**
    * Set the power of the elbow motor
