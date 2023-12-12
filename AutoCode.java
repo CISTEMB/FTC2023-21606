@@ -441,7 +441,8 @@ public class AutoCode extends OpMode
         }
         
         // Telemetry Update.
-        telemetry.addData("Angle", robot.getAngle());
+        robot.updatePersistentTelemetry();
+        //telemetry.addData("Angle", robot.getAngle());
         telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
         telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
         telemetry.addData("Status", "Run Time: " + runtime.toString());

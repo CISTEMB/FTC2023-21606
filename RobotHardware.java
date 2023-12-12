@@ -235,6 +235,8 @@ public class RobotHardware
       RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
       imu.initialize(new IMU.Parameters(orientationOnRobot));
       resetIMU();
+      
+      //composePersistentTelemetry();
 
       telemetry.addData("RobotHardware","Initialized successfully!");
       initialized = true;
@@ -348,6 +350,15 @@ public class RobotHardware
     elbow < target + PRETUCK_RANGE;
   }
   
+  // Persistent Telemetry Vars
+  public double telHeading = 0;
+  public int telElbowPos = 0;
+  
+  void updatePersistentTelemetry(){
+    telemetry.addData("Gyro Heading", telHeading);
+    telemetry.addData("Elbow Position", telElbowPos);
+  }
+  
   /*
   void composeIMUTelemetry() {
 
@@ -434,7 +445,8 @@ public class RobotHardware
         Angle += deltaAngle;
 
         lastAngle = currAngle;
-
+        
+        telHeading = Angle;
         return Angle;
     }
     
