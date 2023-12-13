@@ -96,7 +96,7 @@ public class TestSensor extends OpMode
         // all of le telemetry
         telemetry.addData("Reset encoders button", "A");
         telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
-        telemetry.addData("Wheels", "lf_motor: (%.2f); rf_motor: (%.2f); lb_motor: (%.2f); rb_motor: (%.2f)", robot.lf_motor.getCurrentPosition(), robot.rf_motor.getCurrentPosition(), robot.lb_motor.getCurrentPosition(), robot.rb_motor.getCurrentPosition());
+        telemetry.addData("Wheels", "lf_motor: (%d); rf_motor: (%d); lb_motor: (%d); rb_motor: (%d)", robot.lf_motor.getCurrentPosition(), robot.rf_motor.getCurrentPosition(), robot.lb_motor.getCurrentPosition(), robot.rb_motor.getCurrentPosition());
         telemetry.addData("Distances", "left: (%.2f); right: (%.2f);", robot.leftd_sensor.getDistance(DistanceUnit.INCH), robot.rightd_sensor.getDistance(DistanceUnit.INCH));
         telemetry.addData("Colors", "red: (%d); green: (%d); blue: (%d)", robot.clrl_sensor.red(), robot.clrl_sensor.green(), robot.clrl_sensor.blue());
         
