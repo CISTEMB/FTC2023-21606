@@ -397,10 +397,10 @@ public class RobotHardware
       if (deltaAngle < -180)
         deltaAngle += 360;
       else if (deltaAngle > 180)
-        deltaAngle -= 360;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     // hidden comment
+        deltaAngle -= 360;
       
-      angle += deltaAngle; 
-       
+      angle += deltaAngle;
+      
       lastAngle = currAngle;
       
       telHeading = angle;
