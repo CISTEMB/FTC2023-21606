@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import java.util.Locale;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -47,23 +48,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-/*import com.qualcomm.hardware.bosch.BNO055IMU;
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-import org.firstinspires.ftc.robotcore.external.Func;
 
-
-
-import java.util.Locale;
-*/
 import com.qualcomm.robotcore.hardware.IMU;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
@@ -83,17 +69,14 @@ public class RobotHardware
   public DistanceSensor leftd_sensor = null;
   public DistanceSensor rightd_sensor = null;
   public DistanceSensor centerd_sensor = null;
-  //public BNO055IMU imu = null;
   public IMU imu = null;
+  
   // }
   
   // Declare IMU stuff {
-  //public Orientation angles;
-  //public Acceleration gravity;
-  //public double IMUOffset = 0;
   public YawPitchRollAngles orientation;
   public double lastAngle;
-  public double Angle;
+  public double angle;
   // }
 
   // Declare internal variables(initialization status, errors, etc.) {
@@ -106,48 +89,37 @@ public class RobotHardware
   private Telemetry telemetry = null;
   // }
 
-  // Declare "constants" that can be changed by the host class
-  // Drive control constants {
+  // Declare "constants" that can be changed by the host class {
   public double MAX_MOTOR_POWER = 1.0;
   public double TURN_SENSITIVITY = 0.5;
   public double DRIVE_SENSITIVITY = 0.75;
   public double STRAFE_SENSITIVITY = 0.75;
-  public double SLOW_FACTOR = 0.2;
-  //}
-  
-  // Elbow and Wrist control constants {
-  public double WRIST_SENSITIVITY = 0.001;  
+  public double WRIST_SENSITIVITY = 0.001;
   public double ELBOW_SENSITIVITY = 0.5;
-  public double ELBOW_MAX_SPEED = .75;
-  //}
+  public double SLOW_FACTOR = 0.2;
+  public double GRIPPER_MID = 0.5;
 
-  // Gripper servo position settings {
+  public double WRIST_TUCK = 0;  // reverse for old robot
+  public int ELBOW_TUCK = 0;
+  public int ELBOW_PRETUCK = 150;
+  public int ELBOW_PREPICKUP = 190;
+  public int PRETUCK_RANGE = 10;
+  public double WRIST_BACK = 0.4;   
+  public int ELBOW_BACK = 508;
+  public double WRIST_PICKUP = 1;
+  public int ELBOW_PICKUP = 30;
+  public double ELBOW_MAX_SPEED = .75;
+  public double ELBOW_PRETUCK_MAX_SPEED = 1;
+  
   public double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
   public double RIGHT_GRIP_DROP1 = 0.175;
   public double RIGHT_GRIP_OPEN = 0.25;
   public double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
   public double LEFT_GRIP_DROP1 = 0.685;
   public double LEFT_GRIP_OPEN = 0.6;
-  //}
+  // }
   
-  // Arm and wrist presets {
-  public int ELBOW_PRETUCK = 150;
-  public int PRETUCK_RANGE = 10;
-  public double ELBOW_PRETUCK_MAX_SPEED = 1;
-  
-  public double WRIST_TUCK = 0; 
-  public int ELBOW_TUCK = 0;
-  
-  public int ELBOW_PREPICKUP = 190;
-  
-  public double WRIST_PICKUP = 1;
-  public int ELBOW_PICKUP = 30;
-  
-  public double WRIST_BACK = 0.4;   
-  public int ELBOW_BACK = 508;
-  //}
-  
-  // declare constants for line detection {
+  // declare constants for autonomous {
   public int RED_LIMIT = 700;
   public int BLUE_LIMIT = 1500;
   // }
@@ -185,8 +157,6 @@ public class RobotHardware
         opmode.telemetry.addData("RobotHardware","Error: hardwareMap has been incorrectly defined! Have you configured your robot?");
         return false;
       }
-      
-      // Setup drive hardware objects
       lf_motor = hardwareMap.get(DcMotor.class, "LF_MOTOR");
       rf_motor = hardwareMap.get(DcMotor.class, "RF_MOTOR");
       lb_motor = hardwareMap.get(DcMotor.class, "LB_MOTOR");
@@ -199,13 +169,12 @@ public class RobotHardware
       clrl_sensor = hardwareMap.get(ColorSensor.class, "CLRL_SENSOR");
       leftd_sensor = hardwareMap.get(DistanceSensor.class, "LEFTD_SENSOR");
       rightd_sensor = hardwareMap.get(DistanceSensor.class, "RIGHTD_SENSOR");
-      centerd_sensor = hardwareMap.get(DistanceSensor.class, "CENTERD_SENSOR");
+      
       imu = hardwareMap.get(IMU.class, "IMU");
       
-      // Configure motors
       lf_motor.setDirection(DcMotor.Direction.REVERSE);
       rf_motor.setDirection(DcMotor.Direction.FORWARD);
-      lb_motor.setDirection(DcMotor.Direction.FORWARD); 
+      lb_motor.setDirection(DcMotor.Direction.FORWARD);
       rb_motor.setDirection(DcMotor.Direction.REVERSE);
       elbow_motor.setDirection(DcMotor.Direction.FORWARD);
       
@@ -215,6 +184,7 @@ public class RobotHardware
       rb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       elbow_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       
+      
       lf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       rf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       lb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -222,21 +192,16 @@ public class RobotHardware
       elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-      
-      // Configure Servos
       wrist_servo.setPosition(0);
       setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
       
       launch_servo.setPosition(HOLD_DRONE);
 
-      // Configure IMU
       RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
-      RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+      RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
       RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
       imu.initialize(new IMU.Parameters(orientationOnRobot));
       resetIMU();
-      
-      //composePersistentTelemetry();
 
       telemetry.addData("RobotHardware","Initialized successfully!");
       initialized = true;
@@ -282,6 +247,7 @@ public class RobotHardware
     lb_motor.setTargetPosition(countslb);
     rb_motor.setTargetPosition(countsrb);
   }
+
 
   /**
    * Set the power of the elbow motor
@@ -350,15 +316,13 @@ public class RobotHardware
     elbow < target + PRETUCK_RANGE;
   }
   
-  // Persistent Telemetry Vars
   public double telHeading = 0;
   public int telElbowPos = 0;
   
-  void updatePersistentTelemetry(){
+  void updatePersistentTelemetry() {
     telemetry.addData("Gyro Heading", telHeading);
-    telemetry.addData("Elbow Position", telElbowPos);
+    telemetry.addData("Elboy Position", telElbowPos);
   }
-  
   /*
   void composeIMUTelemetry() {
 
@@ -420,34 +384,44 @@ public class RobotHardware
     }
     */
     
-  
-  public void resetIMU() {
-     imu.resetYaw();
-  }
-  
-  public double getAngle()
-    {
-        // We experimentally determined the Z axis is the axis we want to use for heading angle.
-        // We have to process the angle because the imu works in euler angles so the Z axis is
-        // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
-        // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
-
-        orientation = imu.getRobotYawPitchRollAngles();
-        double currAngle = orientation.getYaw(AngleUnit.DEGREES);
-
-        double deltaAngle = currAngle - lastAngle;
-
-        if (deltaAngle < -180)
-            deltaAngle += 360;
-        else if (deltaAngle > 180)
-            deltaAngle -= 360;
-
-        Angle += deltaAngle;
-
-        lastAngle = currAngle;
-        
-        telHeading = Angle;
-        return Angle;
+    public void resetIMU() {
+      imu.resetYaw();
     }
     
+    public double getAngle() {
+      orientation = imu.getRobotYawPitchRollAngles();
+      double currAngle = orientation.getYaw(AngleUnit.DEGREES);
+      
+      double deltaAngle = currAngle - lastAngle;
+      
+      if (deltaAngle < -180)
+        deltaAngle += 360;
+      else if (deltaAngle > 180)
+        deltaAngle -= 360;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     // hidden comment
+      
+      angle += deltaAngle; 
+       
+      lastAngle = currAngle;
+      
+      telHeading = angle;
+      return angle;
+    }
+    
+    public void gyroDrive(double angle, double speed) {                                                                                
+      double currAngle = getAngle(); 
+      double error = currAngle - angle;
+      
+      double desiredSpeed = speed * ((error/360)/(1.1-speed)); // It's desired cause it's what we want, but the robot does it's own thing. 
+      
+      setDrivePower(-desiredSpeed, -desiredSpeed, -desiredSpeed, -desiredSpeed);
+    }
+    public void gyroStrafe(double angle, double speed) {
+      double currAngle = getAngle();
+      double error = currAngle - angle;
+      
+      double desiredSpeed = speed * ((error/360)/(1.1-speed));
+      
+      setDrivePower(desiredSpeed, -desiredSpeed, -desiredSpeed, desiredSpeed);
+      
+    }
 }

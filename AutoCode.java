@@ -54,20 +54,16 @@ public class AutoCode extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
-    // Declare general global variables {
     private ElapsedTime runtime = new ElapsedTime();
     private double wristPlace = 0;
     private int elbowHold = 0;
     private double waitTime;
-    // }
     
-    // Declare Park variables { 
     private boolean parkRight = false;
     private boolean parkLeft = false;
     private boolean parkFrozen = false;
-    // }
 
-    // Declare auto state machine enums and variables {
+    // Declare drive state machine enums and variables {
     private enum DriveState {
         INIT,
         CLEAR_TRUSS,
@@ -86,7 +82,7 @@ public class AutoCode extends OpMode
         PARK_RIGHT,
         PARK_LEFT,
         END,
-        TEST_TURN
+        TEST_TURN,
     };
     
     private DriveState CurrentDriveState;
@@ -103,18 +99,23 @@ public class AutoCode extends OpMode
     private boolean propCenter = false;
     // }
     
+    
     /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
+        
         boolean initializationStatus = robot.init();
         if (!initializationStatus) {
             telemetry.addData("Status", "Initialization failed!");
             throw new RuntimeException("Initialization failed!");
         }
         robot.setWristPosition(wristPlace);
+        // Initialize states for state machines {
         newDriveState(DriveState.INIT);
+        //newArmState(ArmState.ARM_STATE_INIT);
+        // }
     }
 
     /*
@@ -122,8 +123,6 @@ public class AutoCode extends OpMode
      */
     @Override
     public void init_loop() {
-        
-        // Select Part Location
         if(gamepad1.b && !parkFrozen) {
             parkRight = true;
             parkLeft = false;
@@ -156,9 +155,8 @@ public class AutoCode extends OpMode
      */
     @Override
     public void loop() {
-
-        // Main State Machine Loop
-        switch (CurrentDriveState){
+        
+       switch (CurrentDriveState){
             case INIT:
                 telemetry.addData("Drive state", "Init");
                 if (InitDriveState)
@@ -171,19 +169,15 @@ public class AutoCode extends OpMode
                     newDriveState(DriveState.TEST_TURN);
                 }
                 break;
-    
             case TEST_TURN:
                 telemetry.addData("Drive state", "Test turn");
                 if (InitDriveState) {
-                    turn(0.5,-0.5);
-                    InitDriveState = false;
+                    robot.gyroStrafe(-90, 0.5);
                 }
-                if (gotAngle(-45,true)) {
-                    robot.setDrivePower(0,0,0,0);
-                    newDriveState(DriveState.END);
+                if (true) {
+                    robot.gyroStrafe(-90, 0.5);
                 }
                 break;
-            
             case CLEAR_TRUSS:
                 telemetry.addData("Drive state", "Clearing Truss");
                 if (InitDriveState)
@@ -239,6 +233,7 @@ public class AutoCode extends OpMode
                 }
                 break;    
                 
+                
             case CENTER_MOVE_BACK:
                 telemetry.addData("Drive state", "Center move back");
                 if (InitDriveState)
@@ -255,7 +250,7 @@ public class AutoCode extends OpMode
                 }
                 break;    
                 
-            case LEFT_MOVE_BACK:
+            case  LEFT_MOVE_BACK:
                 telemetry.addData("Drive state", "Left move back");
                 if (InitDriveState)
                 {
@@ -269,10 +264,9 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;
-                
+                break;    
             case LEFT_STRAFE_TO_LINE:
-                telemetry.addData("Drive state", "Left Strafe to Line");
+                telemetry.addData("Drive state","Left Strafe to Line");
                 if (InitDriveState)  // Start Starting
                 {
                     robot.resetDriveEncoders();
@@ -289,7 +283,7 @@ public class AutoCode extends OpMode
                 }
                 break;
                 
-            case RIGHT_MOVE_BACK:
+            case  RIGHT_MOVE_BACK:
                 telemetry.addData("Drive state", "Right move back");
                 if (InitDriveState)
                 {
@@ -306,7 +300,7 @@ public class AutoCode extends OpMode
                 break;    
                 
             case RIGHT_STRAFE_TO_LINE:
-                telemetry.addData("Drive state", "Right Strafe to Line");
+                telemetry.addData("Drive state","Right Strafe to Line");
                 if (InitDriveState)  // Start Starting
                 {   
                     robot.resetDriveEncoders();
@@ -339,7 +333,7 @@ public class AutoCode extends OpMode
                 break;//}
                 
             case DROP_STEP0_PREPICKUP:
-                telemetry.addData("Arm state", "Drop Step 0: PrePickup");
+                telemetry.addData("Arm state", "Drop Step 0; Prepickup");
                 if (InitDriveState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
@@ -366,7 +360,7 @@ public class AutoCode extends OpMode
                 }
                 break;//}
                 
-            case DROP_STEP3://{
+             case DROP_STEP3://{
                 telemetry.addData("Arm state", "Drop step 3");
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 1000;
@@ -404,7 +398,7 @@ public class AutoCode extends OpMode
                 break;//}
             
             case PARK_RIGHT:
-                telemetry.addData("Drive state", "Park Right");
+                telemetry.addData("Drive state","Park Right");
                 if (InitDriveState)  // Start Starting
                 {   
                     robot.resetDriveEncoders();
@@ -418,7 +412,7 @@ public class AutoCode extends OpMode
                 break;
                 
             case PARK_LEFT:
-                telemetry.addData("Drive state", "Park Left");
+                telemetry.addData("Drive state","Park Left");
                 if (InitDriveState)  // Start Starting
                 {   
                     robot.resetDriveEncoders();
@@ -440,9 +434,9 @@ public class AutoCode extends OpMode
                 break;
         }
         
-        // Telemetry Update.
+
+        // Show the elapsed game time and wheel power.
         robot.updatePersistentTelemetry();
-        //telemetry.addData("Angle", robot.getAngle());
         telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
         telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
         telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -454,6 +448,8 @@ public class AutoCode extends OpMode
      */
     @Override
     public void stop() {
+        telemetry.addData("the robot", "how dare you stop me");
+        telemetry.update();
     }
 
     private void newDriveState(DriveState newState) {
@@ -461,7 +457,7 @@ public class AutoCode extends OpMode
         CurrentDriveState = newState;
         InitDriveState = true;
     }
-
+    
     private void speedDrive (double speed){
         robot.lf_motor.setPower(speed);
         robot.rf_motor.setPower(speed);
@@ -544,7 +540,7 @@ public class AutoCode extends OpMode
     private boolean gotAngle(double degrees, boolean clockwise) {
         double heading = robot.getAngle();
         if (clockwise) {
-           return (heading <= degrees);
+            return (heading <= degrees);
         } else {
             return (heading >= degrees);
         }
@@ -553,6 +549,7 @@ public class AutoCode extends OpMode
     private void turn(double leftSpeed, double rightSpeed) {
         robot.setDrivePower(leftSpeed, rightSpeed, leftSpeed, rightSpeed);
     }
+    
     
     private boolean gotLine(){
         int blue = robot.clrl_sensor.blue();
@@ -566,6 +563,7 @@ public class AutoCode extends OpMode
             return false;
         }
     }
+    
     
     private void checkLowestDSensor() {
         double tempL = robot.leftd_sensor.getDistance(DistanceUnit.INCH);
@@ -589,10 +587,12 @@ public class AutoCode extends OpMode
             propRight = false;
             propLeft = false;
         }
+        
+        
     }
     
      private void armControl (double power, int elbow, double wrist, double wristStep) {
-        robot.setElbowPower(power);
+          robot.setElbowPower(power);
         robot.elbow_motor.setTargetPosition(elbow);
                     
         wristPlace=robot.wrist_servo.getPosition();
