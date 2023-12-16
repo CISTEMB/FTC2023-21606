@@ -117,6 +117,8 @@ public class RobotHardware
   public double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
   public double LEFT_GRIP_DROP1 = 0.685;
   public double LEFT_GRIP_OPEN = 0.6;
+  public double PROPORTIONAL_GAIN = 0.03;
+  public double CHECK_DELAY = 20;
   // }
   
   // declare constants for autonomous {
@@ -407,21 +409,58 @@ public class RobotHardware
       return angle;
     }
     
-    public void gyroDrive(double angle, double speed) {                                                                                
-      double currAngle = getAngle(); 
-      double error = currAngle - angle;
-      
-      double desiredSpeed = speed * ((error/360)/(1.1-speed)); // It's desired cause it's what we want, but the robot does it's own thing. 
-      
-      setDrivePower(-desiredSpeed, -desiredSpeed, -desiredSpeed, -desiredSpeed);
+    public void gyroDrive(double angle, double speed) {     
+      long lastUpdateTime = System.currentTimeMillis();
+
+      while (Math.abs(angle - getAngle()) > 1.0) {
+        // Update gyro readings only if enough time has passed
+        if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
+            double error = angle - getAngle();
+            
+            double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
+            double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
+            double leftBackPower = speed - PROPORTIONAL_GAIN * error;
+            double rightBackPower = speed + PROPORTIONAL_GAIN * error;
+            
+            // Limit motor powers to the valid range (-1 to 1)
+            leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
+            rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
+            leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
+            rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
+            
+            // Apply motor powers to the motors
+            setMotorPower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            
+            // Update the last update time
+            lastUpdateTime = System.currentTimeMillis();
+        }
+      }
     }
     public void gyroStrafe(double angle, double speed) {
-      double currAngle = getAngle();
-      double error = currAngle - angle;
-      
-      double desiredSpeed = speed * ((error/360)/(1.1-speed));
-      
-      setDrivePower(desiredSpeed, -desiredSpeed, -desiredSpeed, desiredSpeed);
-      
+      long lastUpdateTime = System.currentTimeMillis();
+
+      while (Math.abs(angle - getAngle()) > 1.0) {
+        // Update gyro readings only if enough time has passed
+        if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
+            double error = angle - getAngle();
+            
+            double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
+            double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
+            double leftBackPower = -(speed - PROPORTIONAL_GAIN * error);
+            double rightBackPower = -(speed + PROPORTIONAL_GAIN * error);
+            
+            // Limit motor powers to the valid range (-1 to 1)
+            leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
+            rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
+            leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
+            rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
+            
+            // Apply motor powers to the motors
+            setMotorPower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            
+            // Update the last update time
+            lastUpdateTime = System.currentTimeMillis();
+        }
+      }
     }
 }
