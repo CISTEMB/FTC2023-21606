@@ -74,11 +74,15 @@ public class AutoCode extends OpMode
         LEFT_STRAFE_TO_LINE,
         RIGHT_MOVE_BACK,
         RIGHT_STRAFE_TO_LINE,
+        DROP_STEP0_PREPICKUP,
         DROP_STEP1,
         DROP_STEP2,
         DROP_STEP3,
         DROP_STEP4,
-        DROP_STEP0_PREPICKUP,
+        TURN_RIGHT,
+        DRIVE_TO_BACKBOARD1,
+        DRIVE_TO_BACKBOARD2,
+        DROP_BACKBOARD,
         PARK_RIGHT,
         PARK_LEFT,
         END,
@@ -396,7 +400,61 @@ public class AutoCode extends OpMode
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK, robot.WRIST_TUCK, .02);
                 }
                 break;//}
-            
+            case TURN_RIGHT:
+                telemetry.addData("Drive state", "Turn Right");
+                if (InitDriveState) {
+                    turn(0.5, -0.5);
+                    InitDriveState = false;
+                }
+                if (true) {
+                    turn(0.5, -0.5);
+                    if (gotAngle(90,true)) {
+                        robot.setDrivePower(0, 0, 0, 0);
+                        newDriveState(DriveState.DRIVE_TO_BACKBOARD);
+                    } else {
+                        
+                    }
+                }
+            case DRIVE_TO_BACKBOARD1:
+                telemetry.addData("Drive state", "Drive to Backboard 1");
+                if (InitDriveState) {
+                    robot.gyroDrive(90, 0.5);
+                    InitDriveState = false;
+                }
+                if (true) {
+                    robot.gyroDrive(90, 0.5);
+                    int blue = robot.clrl_sensor.blue();
+                    int red = robot.clrl_sensor.red();
+                    telemetry.addData("color", "red: " + red + " blue: " + blue);
+                    if (blue > robot.BLUE_LIMIT || red > robot.RED_LIMIT) {
+                        newDriveState(DriveState.DRIVE_TO_BACKBOARD2);
+                    } else {
+                        
+                    }
+                }
+                break;
+            case DRIVE_TO_BACKBOARD2:
+                telemetry.addData("Drive state", "Drive to Backboard 2");
+                if (InitDriveState) {
+                    robot.gyroDrive(90, 0.5);
+                    InitDriveState = false;
+                }
+                if (true) {
+                    if (gotDistance(5, true)) {
+                        robot.setDrivePower(0, 0, 0, 0);
+                        newDriveState(DriveState.DROP_BACKBOARD);
+                    } else {
+
+                    }
+                }
+            case DROP_BACKBOARD:
+                telemetry.addData("Arm state", "Drop Backboard");
+                if (InitDriveState) {
+                    InitDriveState = false;
+                }
+                if (true) {
+                    newDriveState(DriveState.END);
+                }
             case PARK_RIGHT:
                 telemetry.addData("Drive state","Park Right");
                 if (InitDriveState)  // Start Starting
