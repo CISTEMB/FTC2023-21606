@@ -411,11 +411,13 @@ public class RobotHardware
     
     public void gyroDrive(double angle, double speed) {     
       long lastUpdateTime = System.currentTimeMillis();
+      double currentAngle = getAngle();
 
-      while (Math.abs(angle - getAngle()) > 1.0) {
+      do {
         // Update gyro readings only if enough time has passed
         if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
-            double error = angle - getAngle();
+            currentAngle = getAngle();
+            double error = angle - currentAngle;
             
             double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
             double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
@@ -434,15 +436,17 @@ public class RobotHardware
             // Update the last update time
             lastUpdateTime = System.currentTimeMillis();
         }
-      }
+      } while (Math.abs(angle - currentAngle) > 1.0);
     }
     public void gyroStrafe(double angle, double speed) {
       long lastUpdateTime = System.currentTimeMillis();
+      double currentAngle = getAngle();
 
-      while (Math.abs(angle - getAngle()) > 1.0) {
+      do {
         // Update gyro readings only if enough time has passed
         if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
-            double error = angle - getAngle();
+            currentAngle = getAngle();
+            double error = angle - currentAngle;
             
             double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
             double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
@@ -461,6 +465,6 @@ public class RobotHardware
             // Update the last update time
             lastUpdateTime = System.currentTimeMillis();
         }
-      }
+      } while (Math.abs(angle - currentAngle) > 1.0);
     }
 }
