@@ -1,304 +1,611 @@
-/*
-Copyright 2022 FIRST Tech Challenge Team 21606
+/* Copyright (c) 2017 FIRST. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted (subject to the limitations in the disclaimer below) provided that
+ * the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this list
+ * of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * Neither the name of FIRST nor the names of its contributors may be used to endorse or
+ * promote products derived from this software without specific prior written permission.
+ *
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+ * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-associated documentation files (the "Software"), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute,
-sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
 package org.firstinspires.ftc.teamcode;
 
-//import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import com.qualcomm.robotcore.hardware.ColorRangeSensor;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.Blinker;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import org.firstinspires.ftc.teamcode.RobotHardware;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-/**
- * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
- * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a PushBot
- * It includes all the skeletal structure that all linear OpModes contain.
- *
- * Remove a @Disabled the on the next line or two (if present) to add this opmode to the Driver Station OpMode list,
- * or add a @Disabled annotation to prevent this OpMode from being added to the Driver Station
+
+/*
+ * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
-@Autonomous(name="Game: Autonomous", group="Game", preselectTeleOp="Game: TeleOp Drive - LFA")
 
-public class GameAuto extends LinearOpMode {
-    private Blinker control_Hub;
-    private Blinker expansion_Hub_1;
-    private DcMotor Lb_Motor;
-    private DcMotor Lf_Motor;
-    private DcMotor Rb_Motor;
-    private DcMotor Rf_Motor;
-    private DcMotor Arm_Motor;
-    private Servo Wrist_Servo;
-    private Servo Lg_Servo;
-    private Servo Rg_Servo;
-    private ColorRangeSensor Color_Sensor;
+@Autonomous(name="Auto Code", group="Practice", preselectTeleOp="Teleop Code")
 
+public class AutoCode extends OpMode
+{
+    private RobotHardware robot = new RobotHardware(this);
+    
+    private ElapsedTime runtime = new ElapsedTime();
+    private double wristPlace = 0;
+    private int elbowHold = 0;
+    private double waitTime;
+    
+    private boolean parkRight = false;
+    private boolean parkLeft = false;
+    private boolean parkFrozen = false;
 
+    // Declare drive state machine enums and variables {
+    private enum DriveState {
+        INIT,
+        CLEAR_TRUSS,
+        FIND_LINE,
+        CENTER_PUSH_PROP,
+        CENTER_MOVE_BACK,
+        LEFT_MOVE_BACK,
+        LEFT_STRAFE_TO_LINE,
+        RIGHT_MOVE_BACK,
+        RIGHT_STRAFE_TO_LINE,
+        DROP_STEP1,
+        DROP_STEP2,
+        DROP_STEP3,
+        DROP_STEP4,
+        DROP_STEP0_PREPICKUP,
+        PARK_RIGHT,
+        PARK_LEFT,
+        END,
+        TEST_TURN,
+    };
+    
+    private DriveState CurrentDriveState;
+    private boolean InitDriveState = false;
+    private ElapsedTime DriveStateTime = new ElapsedTime();
+    // } 
+    
+    // Declare distance sensor stuff {
+    private double minReadingLeft = 65535;
+    private double minReadingRight = 65535;
+    private double minReadingCenter = 65535;
+    private boolean propLeft = false;
+    private boolean propRight = false;
+    private boolean propCenter = false;
+    // }
+    
+    
+    /*
+     * Code to run ONCE when the driver hits INIT
+     */
     @Override
-    public void runOpMode() {
-        control_Hub = hardwareMap.get(Blinker.class, "Control Hub");
-        expansion_Hub_1 = hardwareMap.get(Blinker.class, "Expansion Hub 1");
-        Lb_Motor = hardwareMap.get(DcMotor.class, "Lb-motor");
-        Lf_Motor = hardwareMap.get(DcMotor.class, "Lf-motor");
-        Rb_Motor = hardwareMap.get(DcMotor.class, "Rb-motor");
-        Rf_Motor = hardwareMap.get(DcMotor.class, "Rf-motor");
-        Arm_Motor = hardwareMap.get(DcMotor.class, "Arm-motor");
-        Wrist_Servo = hardwareMap.get(Servo.class, "Wrist_Servo");
-        Lg_Servo = hardwareMap.get(Servo.class, "Lg_Servo");
-        Rg_Servo = hardwareMap.get(Servo.class, "Rg_Servo");
-        Color_Sensor = hardwareMap.get(ColorRangeSensor.class, "Color_Sensor");
+    public void init() {
         
-        
-        // ****** Set-Up Gripper ****** //
-        final double wristUp = 1;   //The postition the wrist is at when it is up
-        final double wristFlat = 0.525;
-        Wrist_Servo.setPosition(wristUp);
-        Lg_Servo.setPosition(-1);
-        Rg_Servo.setPosition(1);
-        
-        // ****** Drive Motor Setup ****** //
-        //Setting up the variables for drive
-        //double pc=0.5;  //power coeficcient
-        //double sl=0.65; //speed limit
-        int motorPlace = 0;   // How far the motor goes
-        //Set variables for motor speed
-        double lfc=0;   //Left front motor speed
-        double rfc=0;   //Right front motor speed
-        double lbc=0;   //Left back motor speed
-        double rbc=0;   //Right back motor speed
-        
-        //Set motors to correct direction
-        double square1 = 21.25; // How far the robot moves when it hits the starting position
-        
-        Lf_Motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        Lb_Motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        Rf_Motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        Rb_Motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        
-        Lf_Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        Lf_Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Lf_Motor.setTargetPosition(motorPlace);
-        Lf_Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        
-        Lb_Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        Lb_Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Lb_Motor.setTargetPosition(motorPlace);
-        Lb_Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        
-        Rf_Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        Rf_Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Rf_Motor.setTargetPosition(motorPlace);
-        Rf_Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        
-        Rb_Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        Rb_Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Rb_Motor.setTargetPosition(motorPlace);
-        Rb_Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-       
-        // ****** Set-Up Telemtry ****** //
-        telemetry.addData("Status", "Initialized");
+        boolean initializationStatus = robot.init();
+        if (!initializationStatus) {
+            telemetry.addData("Status", "Initialization failed!");
+            throw new RuntimeException("Initialization failed!");
+        }
+        robot.setWristPosition(wristPlace);
+        // Initialize states for state machines {
+        newDriveState(DriveState.INIT);
+        //newArmState(ArmState.ARM_STATE_INIT);
+        // }
+    }
+
+    /*
+     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
+     */
+    @Override
+    public void init_loop() {
+        if(gamepad1.b && !parkFrozen) {
+            parkRight = true;
+            parkLeft = false;
+        }
+        if(gamepad1.x && !parkFrozen) {
+            parkRight = false;
+            parkLeft = true;
+        }
+        if(gamepad1.a && !parkFrozen) {
+            parkRight = false;
+            parkLeft = false;
+        }
+        if(gamepad1.guide) {
+            parkFrozen = !parkFrozen;
+        }
+        telemetry.addData("parkState","parkRight: " + parkRight + " parkLeft: " + parkLeft + " parkFrozen: " + parkFrozen);
         telemetry.update();
-        
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart();
+    }
 
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            telemetry.addData("Status", "Running");
-            
-            //drive to cone
-            straightDrive(square1, 0.3, 6); 
-            
-            //read singal
-            int signal = readSignal();
-            
-            //drive to center of the square
-            straightDrive(8, 0.5, 3);
-            
-            //if move right
-            if (signal == 3) {
-                //staraph right
-                strafeDrive (24,0.5,5);
-            } else if (signal == 1){
-                //staraph left
-                strafeDrive (-24,0.5,5);
-            } else {
-                straightDrive(8, 0.5, 3);
-                straightDrive(-8, 0.5, 3);
-            }
-            
-            //Wrist_Servo.setPosition(wristFlat);
-            sleep(30000);
-        }
+    /*
+     * Code to run ONCE when the driver hits PLAY
+     */
+    @Override
+    public void start() {
+        runtime.reset();
     }
-    
-    // METHOD 2R DRIVE
-    public void straightDrive (double distance, double power, double runTime) {
-        
-        //  1000 counts equals 18.25 inches
-        int counts = (int) (distance*1000/18.5);
-        
-        double stTime = time;
-        
-        int LfCounts = Lf_Motor.getCurrentPosition()+ counts;
-        int RfCounts = Rf_Motor.getCurrentPosition()+ counts;
-        int LbCounts = Lb_Motor.getCurrentPosition()+ counts;
-        int RbCounts = Rb_Motor.getCurrentPosition()+ counts;
-        
-        Lf_Motor.setTargetPosition(LfCounts);
-        Lb_Motor.setTargetPosition(LbCounts);
-        Rf_Motor.setTargetPosition(RfCounts);
-        Rb_Motor.setTargetPosition(RbCounts);
-            
-        Lf_Motor.setPower(power);
-        Rf_Motor.setPower(power);
-        Lb_Motor.setPower(power);
-        Rb_Motor.setPower(power);
-            
-        while ((Lf_Motor.isBusy() || Rf_Motor.isBusy()) && opModeIsActive()){
-            telemetry.addData("method","straightDrive" );
-            telemetry.addData("T distance",distance);
-            telemetry.addData("T power",power);
-            telemetry.addData("T counts", counts);
-            telemetry.addData("T LfCounts", LfCounts);
-            telemetry.addData("T RfCounts", RfCounts);
-            telemetry.addData("T LbCounts", LbCounts);
-            telemetry.addData("T RbCounts", RbCounts);
-            telemetry.addData("Lf counts",Lf_Motor.getCurrentPosition() );
-            telemetry.addData("Rf counts",Rf_Motor.getCurrentPosition() );
-            telemetry.addData("Lb counts",Lb_Motor.getCurrentPosition() );
-            telemetry.addData("Rb counts",Rb_Motor.getCurrentPosition() );
-            telemetry.update();
-            
-            if (time - stTime > runTime){
-                Lf_Motor.setTargetPosition(Lf_Motor.getCurrentPosition());
-                Rf_Motor.setTargetPosition(Rf_Motor.getCurrentPosition());
-                Lb_Motor.setTargetPosition(Lb_Motor.getCurrentPosition());
-                Rb_Motor.setTargetPosition(Rb_Motor.getCurrentPosition());
-            }
-            
-            sleep(100);
-        }
-            
-        Lf_Motor.setPower(0);
-        Rf_Motor.setPower(0);
-        Lb_Motor.setPower(0);
-        Rb_Motor.setPower(0); 
-    }
-    
-    
-    
-    // METHOD 2R STRAFE
-    public void strafeDrive (double distance, double power, double runTime) {
-        
-        //  1000 counts equals 17.25 inches
-        int counts = (int) (distance*1000/17.5);
-        
-        double stTime = time;
-        
-        int LfCounts = Lf_Motor.getCurrentPosition()+ counts;
-        int RfCounts = Rf_Motor.getCurrentPosition()- counts;
-        int LbCounts = Lb_Motor.getCurrentPosition()- counts;
-        int RbCounts = Rb_Motor.getCurrentPosition()+ counts;
-        
-        Lf_Motor.setTargetPosition(LfCounts);
-        Lb_Motor.setTargetPosition(LbCounts);
-        Rf_Motor.setTargetPosition(RfCounts);
-        Rb_Motor.setTargetPosition(RbCounts);
-            
-        Lf_Motor.setPower(power);
-        Rf_Motor.setPower(power);
-        Lb_Motor.setPower(power);
-        Rb_Motor.setPower(power);
-            
-        while ((Lf_Motor.isBusy() || Rf_Motor.isBusy()) && opModeIsActive()){
-            telemetry.addData("method","strafeDrive" );
-            telemetry.addData("T distance",distance);
-            telemetry.addData("T power",power);
-            telemetry.addData("T counts", counts);
-            telemetry.addData("T LfCounts", LfCounts);
-            telemetry.addData("T RfCounts", RfCounts);
-            telemetry.addData("T LbCounts", LbCounts);
-            telemetry.addData("T RbCounts", RbCounts);
-            telemetry.addData("Lf counts",Lf_Motor.getCurrentPosition() );
-            telemetry.addData("Rf counts",Rf_Motor.getCurrentPosition() );
-            telemetry.addData("Lb counts",Lb_Motor.getCurrentPosition() );
-            telemetry.addData("Rb counts",Rb_Motor.getCurrentPosition() );
-            telemetry.update();
-            
-            if (time - stTime > runTime){
-                Lf_Motor.setTargetPosition(Lf_Motor.getCurrentPosition());
-                Rf_Motor.setTargetPosition(Rf_Motor.getCurrentPosition());
-                Lb_Motor.setTargetPosition(Lb_Motor.getCurrentPosition());
-                Rb_Motor.setTargetPosition(Rb_Motor.getCurrentPosition());
-            }
-            
-            sleep(100);
-     
-        }
-            
-        Lf_Motor.setPower(0);
-        Rf_Motor.setPower(0);
-        Lb_Motor.setPower(0);
-        Rb_Motor.setPower(0); 
-    }
-    
 
-    //METHOD 2R SIGNAL
-    public int readSignal(){
-        double stTime = time;
-        double redGain = 2;
-        double greenGain = 1;
-        double blueGain = 1;
+    /*
+     * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
+     */
+    @Override
+    public void loop() {
         
-        while ((time - stTime < 5) && opModeIsActive()) {
+       switch (CurrentDriveState){
+            case INIT:
+                telemetry.addData("Drive state", "Init");
+                if (InitDriveState)
+                {
+                    robot.setDrivePower(0, 0, 0, 0);
+                    
+                    InitDriveState = false;
+                } 
+                if (true) { // Because we not want to immedatly start
+                    newDriveState(DriveState.TEST_TURN);
+                }
+                break;
+            case TEST_TURN:
+                telemetry.addData("Drive state", "Test turn");
+                if (InitDriveState) {
+                    robot.gyroStrafe(-90, 0.5);
+                }
+                if (true) {
+                    robot.gyroStrafe(-90, 0.5);
+                }
+                break;
+            case CLEAR_TRUSS:
+                telemetry.addData("Drive state", "Clearing Truss");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(.5);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (24, true)) {  // Time to leave
+                    newDriveState(DriveState.FIND_LINE);
+                } else {  // Stick around
+                    
+                }
+                break;
+                
+            case FIND_LINE:
+                telemetry.addData("Drive state","Find Line");
+                if (InitDriveState)  // Start Starting
+                {
+                    speedDrive(.075); 
+                    InitDriveState = false;
+                } else if (gotLine()) {  // Time to leave
+                    if (propCenter) {
+                        newDriveState(DriveState.CENTER_PUSH_PROP);
+                    } else if (propLeft) {
+                        newDriveState(DriveState.LEFT_MOVE_BACK);
+                    } else if (propRight) {
+                        newDriveState(DriveState.RIGHT_MOVE_BACK);
+                    }
+                    else {
+                        newDriveState(DriveState.END);
+                    }
+                } else if (gotDistance(55, true)){
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                    checkLowestDSensor();
+                }
+                break;
+                
+            case CENTER_PUSH_PROP:
+                telemetry.addData("Drive state", "Center Push Prop");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (5, true)) {  // Time to leave
+                    newDriveState(DriveState.CENTER_MOVE_BACK);
+                } else {  // Stick around
+                    
+                }
+                break;    
+                
+                
+            case CENTER_MOVE_BACK:
+                telemetry.addData("Drive state", "Center move back");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(-.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (-9, false)) {  // Time to leave
+                    speedDrive(0);
+                    newDriveState(DriveState.DROP_STEP0_PREPICKUP);
+                } else {  // Stick around
+                    
+                }
+                break;    
+                
+            case  LEFT_MOVE_BACK:
+                telemetry.addData("Drive state", "Left move back");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(-.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (-9, false)) {  // Time to leave
+                    speedDrive(0);
+                    newDriveState(DriveState.LEFT_STRAFE_TO_LINE);
+                } else {  // Stick around
+                    
+                }
+                break;    
+            case LEFT_STRAFE_TO_LINE:
+                telemetry.addData("Drive state","Left Strafe to Line");
+                if (InitDriveState)  // Start Starting
+                {
+                    robot.resetDriveEncoders();
+                    speedStrafe(-.05); 
+                    InitDriveState = false;
+                } else if (gotLine()) {  // Time to leave
+                        stopDrive();
+                        newDriveState(DriveState.DROP_STEP0_PREPICKUP);
+                    
+                } else if (gotStrafeDistance(-10, false)){ // todo make 40
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                }
+                break;
+                
+            case  RIGHT_MOVE_BACK:
+                telemetry.addData("Drive state", "Right move back");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(-.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (-9, false)) {  // Time to leave
+                    speedDrive(0);
+                    newDriveState(DriveState.RIGHT_STRAFE_TO_LINE);
+                } else {  // Stick around
+                    
+                }
+                break;    
+                
+            case RIGHT_STRAFE_TO_LINE:
+                telemetry.addData("Drive state","Right Strafe to Line");
+                if (InitDriveState)  // Start Starting
+                {   
+                    robot.resetDriveEncoders();
+                    speedStrafe(.05); 
+                    InitDriveState = false;
+                } else if (gotLine()) {  // Time to leave
+                        stopDrive();
+                        newDriveState(DriveState.DROP_STEP0_PREPICKUP);
+                    
+                } else if (gotStrafeDistance(10, true)){ 
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                }
+                break;
+        
+            case DROP_STEP1://{
+                telemetry.addData("Arm state", "Drop step 1");
+                if (InitDriveState) {
+                     waitTime = DriveStateTime.milliseconds()+ 1000;
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (robot.elbowWithinRange(robot.ELBOW_PICKUP) &&
+                    DriveStateTime.milliseconds() > waitTime) {
+                    newDriveState(DriveState.DROP_STEP2);
+                } else {
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .02);
+                }
+                break;//}
+                
+            case DROP_STEP0_PREPICKUP:
+                telemetry.addData("Arm state", "Drop Step 0; Prepickup");
+                if (InitDriveState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (robot.elbowWithinRange(robot.ELBOW_PREPICKUP)){
+                    newDriveState(DriveState.DROP_STEP1);
+                } else {
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
+                    //gripperControl(grip_wide_btn, grip_mid_btn);
+                }
+                break;//}
+        
+            case DROP_STEP2://{
+                telemetry.addData("Arm state", "Drop step 2");
+                if (InitDriveState) {
+                    waitTime = DriveStateTime.milliseconds()+ 1000;
+                    robot.setGripperPosition(robot.LEFT_GRIP_OPEN, robot.RIGHT_GRIP_OPEN);
+                    InitDriveState = false;
+                }
+                if (DriveStateTime.milliseconds() > waitTime) {
+                    newDriveState(DriveState.DROP_STEP3);
+                } else {
+                    
+                }
+                break;//}
+                
+             case DROP_STEP3://{
+                telemetry.addData("Arm state", "Drop step 3");
+                if (InitDriveState) {
+                    waitTime = DriveStateTime.milliseconds()+ 1000;
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (robot.elbowWithinRange(robot.ELBOW_PRETUCK) &&
+                    DriveStateTime.milliseconds() > waitTime) {
+                    newDriveState(DriveState.DROP_STEP4);
+                } else {
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PRETUCK, wristPlace, .02);
+                }
+                break;//}
+                
+            case DROP_STEP4://{
+                telemetry.addData("Arm state", "Drop step 4");
+                if (InitDriveState) {
+                    waitTime = DriveStateTime.milliseconds()+ 1000;
+                    robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (robot.elbowWithinRange(robot.ELBOW_TUCK) &&
+                    DriveStateTime.milliseconds() > waitTime) {
+                    if(parkRight){
+                        newDriveState(DriveState.PARK_RIGHT);
+                    } else if(parkLeft){
+                        newDriveState(DriveState.PARK_LEFT);
+                    } else{
+                        newDriveState(DriveState.END);  
+                    }
+                } else {
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK, robot.WRIST_TUCK, .02);
+                }
+                break;//}
             
-            telemetry.addData("Red", Color_Sensor.red()*redGain);
-            telemetry.addData("Green", Color_Sensor.green()*greenGain);
-            telemetry.addData("Blue", Color_Sensor.blue()*blueGain);
-            telemetry.addData("Distance", Color_Sensor.getDistance(DistanceUnit.INCH));
-            telemetry.update();
+            case PARK_RIGHT:
+                telemetry.addData("Drive state","Park Right");
+                if (InitDriveState)  // Start Starting
+                {   
+                    robot.resetDriveEncoders();
+                    speedStrafe(.1); 
+                    InitDriveState = false;
+                } else if (gotStrafeDistance(50, true) || robot.rightd_sensor.getDistance(DistanceUnit.INCH)<=3){ 
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                }
+                break;
+                
+            case PARK_LEFT:
+                telemetry.addData("Drive state","Park Left");
+                if (InitDriveState)  // Start Starting
+                {   
+                    robot.resetDriveEncoders();
+                    speedStrafe(-.1); 
+                    InitDriveState = false;
+                } else if (gotStrafeDistance(-50, false) || robot.leftd_sensor.getDistance(DistanceUnit.INCH)<=3){ 
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                }
+                break;
+                
+            case END:
+                telemetry.addData("Drive state","END");
+                if (true)
+                {
+                    stopDrive();
+                }
+                break;
         }
-        double red = Color_Sensor.red()*redGain;
-        double green = Color_Sensor.green()*greenGain;
-        double blue = Color_Sensor.blue()*blueGain;
         
-        if((red > blue) && (red > green)) {
-            return 1;
-            
-        } else if ((blue > red) && (blue > green)) {
-            return 3;
+
+        // Show the elapsed game time and wheel power.
+        robot.updatePersistentTelemetry();
+        telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
+        telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
+        telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.update();
+    }
+
+    /*
+     * Code to run ONCE after the driver hits STOP
+     */
+    @Override
+    public void stop() {
+        telemetry.addData("the robot", "how dare you stop me");
+        telemetry.update();
+    }
+
+    private void newDriveState(DriveState newState) {
+        DriveStateTime.reset();
+        CurrentDriveState = newState;
+        InitDriveState = true;
+    }
+    
+    private void speedDrive (double speed){
+        robot.lf_motor.setPower(speed);
+        robot.rf_motor.setPower(speed);
+        robot.lb_motor.setPower(speed);
+        robot.rb_motor.setPower(speed);
+        robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    private void speedStrafe (double speed){
+        robot.lf_motor.setPower(speed);
+        robot.rf_motor.setPower(-speed);
+        robot.lb_motor.setPower(-speed);
+        robot.rb_motor.setPower(speed);
+        robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    
+    private void stopDrive (){
+        robot.lf_motor.setPower(0);
+        robot.rf_motor.setPower(0);
+        robot.lb_motor.setPower(0);
+        robot.rb_motor.setPower(0);
+        robot.lf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rf_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.lb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rb_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    
+    private boolean gotDistance (double inches, boolean dirForward){
+        int counts=(int)(inches*38);
+        if (dirForward){
+            if ((robot.lf_motor.getCurrentPosition() +
+                 robot.rf_motor.getCurrentPosition() +
+                 robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())>= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
         } else {
-            return 2;
+            if ((robot.lf_motor.getCurrentPosition() +
+                 robot.rf_motor.getCurrentPosition() +
+                 robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())<= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
+        }
+    }
+
+    private boolean gotStrafeDistance (double inches, boolean dirRight){
+        int counts=(int)(inches*67);
+        if (dirRight){
+            if ((robot.lf_motor.getCurrentPosition() +
+                 -robot.rf_motor.getCurrentPosition() +
+                 -robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())>= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
+        } else {
+            if ((robot.lf_motor.getCurrentPosition() +
+                 -robot.rf_motor.getCurrentPosition() +
+                 -robot.lb_motor.getCurrentPosition() +
+                 robot.rb_motor.getCurrentPosition())<= counts*4){
+                    return true;
+                }else{
+                    return false;
+                }
+        }
+    }
+    
+    private boolean gotAngle(double degrees, boolean clockwise) {
+        double heading = robot.getAngle();
+        if (clockwise) {
+            return (heading <= degrees);
+        } else {
+            return (heading >= degrees);
+        }
+    }
+
+    private void turn(double leftSpeed, double rightSpeed) {
+        robot.setDrivePower(leftSpeed, rightSpeed, leftSpeed, rightSpeed);
+    }
+    
+    
+    private boolean gotLine(){
+        int blue = robot.clrl_sensor.blue();
+        int red = robot.clrl_sensor.red();
+        telemetry.addData("color", "red:"+red+" blue:"+blue);
+        if (blue > robot.BLUE_LIMIT){
+            return true;
+        } else if (red > robot.RED_LIMIT){
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    
+    private void checkLowestDSensor() {
+        double tempL = robot.leftd_sensor.getDistance(DistanceUnit.INCH);
+        double tempR = robot.rightd_sensor.getDistance(DistanceUnit.INCH);
+        if (tempL < minReadingLeft) {
+            minReadingLeft = tempL;
+        }
+        if (tempR < minReadingRight) {
+            minReadingRight = tempR;
+        }
+        if (minReadingLeft < minReadingRight && minReadingLeft < 8) {
+            propLeft = true;
+            propRight = false;
+            propCenter = false;
+        } else if (minReadingRight < minReadingLeft && minReadingRight < 8) {
+            propRight = true;
+            propLeft = false;
+            propCenter = false;
+        } else {
+            propCenter = true;
+            propRight = false;
+            propLeft = false;
         }
         
         
     }
     
+     private void armControl (double power, int elbow, double wrist, double wristStep) {
+          robot.setElbowPower(power);
+        robot.elbow_motor.setTargetPosition(elbow);
+                    
+        wristPlace=robot.wrist_servo.getPosition();
+                   
+        if  (-wristStep < wrist - wristPlace && wrist - wristPlace < wristStep) {
+            robot.setWristPosition(wrist);
+        } else if (wristPlace < wrist) {
+            robot.setWristPosition(wristPlace + wristStep);
+        } else  {
+            robot.setWristPosition(wristPlace - wristStep);
+        }
+                    
+        telemetry.addData("Target Wrist location", wrist);
+        telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
+    }
 }

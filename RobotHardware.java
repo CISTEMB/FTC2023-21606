@@ -412,6 +412,7 @@ public class RobotHardware
     public void gyroDrive(double angle, double speed) {     
       long lastUpdateTime = System.currentTimeMillis();
       double currentAngle = getAngle();
+      setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
       do {
         // Update gyro readings only if enough time has passed
@@ -431,16 +432,17 @@ public class RobotHardware
             rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
             
             // Apply motor powers to the motors
-            setMotorPower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
             
             // Update the last update time
             lastUpdateTime = System.currentTimeMillis();
         }
-      } while (Math.abs(angle - currentAngle) > 1.0);
+      } while (Math.abs(angle - currentAngle) > 1.0 && opmode.opModeIsActive());
     }
     public void gyroStrafe(double angle, double speed) {
       long lastUpdateTime = System.currentTimeMillis();
       double currentAngle = getAngle();
+      setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
       do {
         // Update gyro readings only if enough time has passed
@@ -460,11 +462,11 @@ public class RobotHardware
             rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
             
             // Apply motor powers to the motors
-            setMotorPower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
             
             // Update the last update time
             lastUpdateTime = System.currentTimeMillis();
         }
-      } while (Math.abs(angle - currentAngle) > 1.0);
+      } while (Math.abs(angle - currentAngle) > 1.0 && opmode.opModeIsActive());
     }
 }
