@@ -437,7 +437,7 @@ public class RobotHardware
             // Update the last update time
             lastUpdateTime = System.currentTimeMillis();
         }
-      } while (Math.abs(angle - currentAngle) > 1.0 && opmode.opModeIsActive());
+      } while (Math.abs(angle - currentAngle) > 1.0);
     }
     public void gyroStrafe(double angle, double speed) {
       long lastUpdateTime = System.currentTimeMillis();
@@ -467,6 +467,6 @@ public class RobotHardware
             // Update the last update time
             lastUpdateTime = System.currentTimeMillis();
         }
-      } while (Math.abs(angle - currentAngle) > 1.0 && opmode.opModeIsActive());
+      } while (Math.abs(angle - currentAngle) > 1.0);
     }
 }
