@@ -61,6 +61,8 @@ public class AutoCode extends OpMode
     
     private boolean parkRight = false;
     private boolean parkLeft = false;
+    private boolean trussBack = false;
+    private boolean trussFront = false;
     private boolean parkFrozen = false;
 
     // Declare drive state machine enums and variables {
@@ -82,7 +84,7 @@ public class AutoCode extends OpMode
         TURN_RIGHT,
         DRIVE_TO_BACKBOARD1,
         DRIVE_TO_BACKBOARD2,
-        DROP_BACKBOARD,
+        DROP_BACKBOARD_0_PREPICKUP,
         PARK_RIGHT,
         PARK_LEFT,
         END,
@@ -127,7 +129,23 @@ public class AutoCode extends OpMode
      */
     @Override
     public void init_loop() {
-        if(gamepad1.b && !parkFrozen) {
+        if (gamepad1.a && !parkFrozen) { // unclear what parkFrozen is for, it is only used here
+            parkRight = true;
+            parkLeft = false;
+        } if (gamepad1.b && !parkFrozen) {
+            parkRight = false;
+            parkLeft = true;
+        } if (gamepad1.x && !parkFrozen) {
+            parkRight = false;
+            parkLeft = false;
+        } if (gamepad1.left_bumper && !parkFrozen) {
+            trussBack = true;
+            trussFront = false;
+        } if (gamepad1.right_bumper && !parkFrozen) {
+            trussBack = false;
+            trussFront = true;
+        }
+        /* if(gamepad1.b && !parkFrozen) {
             parkRight = true;
             parkLeft = false;
         }
@@ -141,7 +159,7 @@ public class AutoCode extends OpMode
         }
         if(gamepad1.guide) {
             parkFrozen = !parkFrozen;
-        }
+        } */
         telemetry.addData("parkState","parkRight: " + parkRight + " parkLeft: " + parkLeft + " parkFrozen: " + parkFrozen);
         telemetry.update();
     }
@@ -410,7 +428,7 @@ public class AutoCode extends OpMode
                     turn(0.5, -0.5);
                     if (gotAngle(90,true)) {
                         robot.setDrivePower(0, 0, 0, 0);
-                        newDriveState(DriveState.DRIVE_TO_BACKBOARD);
+                        newDriveState(DriveState.DRIVE_TO_BACKBOARD1);
                     } else {
                         
                     }
@@ -436,25 +454,29 @@ public class AutoCode extends OpMode
             case DRIVE_TO_BACKBOARD2:
                 telemetry.addData("Drive state", "Drive to Backboard 2");
                 if (InitDriveState) {
-                    robot.gyroDrive(90, 0.5);
+                    robot.gyroDrive(-90, 0.5);
                     InitDriveState = false;
                 }
                 if (true) {
                     if (gotDistance(5, true)) {
                         robot.setDrivePower(0, 0, 0, 0);
-                        newDriveState(DriveState.DROP_BACKBOARD);
+                        newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
                     } else {
 
                     }
                 }
-            case DROP_BACKBOARD:
-                telemetry.addData("Arm state", "Drop Backboard");
+            case DROP_BACKBOARD_0_PREPICKUP:
+                telemetry.addData("Arm state", "Backboard Drop 0; Prepickup");
                 if (InitDriveState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }
-                if (true) {
-                    newDriveState(DriveState.END);
+                if (robot.elbowWithinRange(robot.ELBOW_PREPICKUP)){
+                    newDriveState(DriveState.DROP_STEP1);
+                } else {
+                    armControl(robot.ELBOW_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
                 }
+                break;
             case PARK_RIGHT:
                 telemetry.addData("Drive state","Park Right");
                 if (InitDriveState)  // Start Starting
