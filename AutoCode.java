@@ -84,11 +84,14 @@ public class AutoCode extends OpMode
         TURN_RIGHT,
         DRIVE_TO_BACKBOARD1,
         DRIVE_TO_BACKBOARD2,
+        BACKBOARD_MOVE_CENTER,
+        BACKBOARD_MOVE_RIGHT,
+        BACKBOARD_MOVE_LEFT,
         DROP_BACKBOARD_0_PREPICKUP,
         PARK_RIGHT,
         PARK_LEFT,
         END,
-        TEST_TURN,
+        // TEST_TURN,
     };
     
     private DriveState CurrentDriveState;
@@ -103,6 +106,12 @@ public class AutoCode extends OpMode
     private boolean propLeft = false;
     private boolean propRight = false;
     private boolean propCenter = false;
+    private boolean backboardCenterMin = 0;
+    private boolean backboardCenterMax = 318727981;
+    private boolean backboardLeftMin = 0;
+    private boolean backboardLeftMax = 318727981;
+    private boolean backboardRightMin = 0;
+    private boolean backboardRightMax = 318727981;
     // }
     
     
@@ -188,10 +197,11 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } 
                 if (true) { // Because we not want to immedatly start
-                    newDriveState(DriveState.TEST_TURN);
+                    // newDriveState(DriveState.TEST_TURN);
+                    newDriveState(DriveState.CLEAR_TRUSS)
                 }
                 break;
-            case TEST_TURN:
+            /* case TEST_TURN:
                 telemetry.addData("Drive state", "Test turn");
                 if (InitDriveState) {
                     robot.gyroStrafe(-90, 0.5);
@@ -199,7 +209,7 @@ public class AutoCode extends OpMode
                 if (true) {
                     robot.gyroStrafe(-90, 0.5);
                 }
-                break;
+                break; */
             case CLEAR_TRUSS:
                 telemetry.addData("Drive state", "Clearing Truss");
                 if (InitDriveState)
@@ -457,13 +467,41 @@ public class AutoCode extends OpMode
                     robot.gyroDrive(-90, 0.5);
                     InitDriveState = false;
                 }
-                if (true) {
-                    if (gotDistance(5, true)) {
-                        robot.setDrivePower(0, 0, 0, 0);
-                        newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
-                    } else {
-
+                if (gotDistance(5, true)) {
+                    robot.setDrivePower(0, 0, 0, 0);
+                    if (propCenter) {
+                        newDriveState(DriveState.BACKBOARD_MOVE_CENTER);
+                    } else if (propLeft) {
+                        newDriveState(DriveState.BACKBOARD_MOVE_LEFT);
+                    } else if (propRight) {
+                        newDriveState(DriveState.BACKBOARD_MOVE_RIGHT);
                     }
+                } else {
+
+                }
+            case BACKBOARD_MOVE_CENTER:
+                telemetry.addData("Drive state", "Backboard move center");
+                if (InitDriveState) {
+                    InitDriveState = false;
+                }
+                if (true) {
+                    newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
+                }
+            case BACKBOARD_MOVE_LEFT:
+                telemetry.addData("Drive state", "Backboard move left");
+                if (InitDriveState) {
+                    InitDriveState = false;
+                }
+                if (true) {
+                    newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
+                }
+            case BACKBOARD_MOVE_RIGHT:
+                telemetry.addData("Drive state", "Backboard move right");
+                if (InitDriveState) {
+                    InitDriveState = false;
+                }
+                if (true) {
+                    newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
                 }
             case DROP_BACKBOARD_0_PREPICKUP:
                 telemetry.addData("Arm state", "Backboard Drop 0; Prepickup");
