@@ -111,12 +111,12 @@ public class RobotHardware
   public double ELBOW_MAX_SPEED = .75;
   public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
-  public double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
+  public double RIGHT_GRIP_CLOSED = 0.75;  // right grip closes on low
   // public double RIGHT_GRIP_DROP1 = 0.175;
-  public double RIGHT_GRIP_OPEN = 0.25;
-  public double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
+  public double RIGHT_GRIP_OPEN = 0.2;
+  public double LEFT_GRIP_CLOSED = 0.35;  // left grip closes on high
   // public double LEFT_GRIP_DROP1 = 0.685;
-  public double LEFT_GRIP_OPEN = 0.6;
+  public double LEFT_GRIP_OPEN = 0.8;
   public double PROPORTIONAL_GAIN = 0.03;
   public double CHECK_DELAY = 20;
   // }
