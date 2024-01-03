@@ -61,6 +61,8 @@ public class AutoCode extends OpMode
     
     private boolean parkRight = false;
     private boolean parkLeft = false;
+    private boolean trussBack = false;
+    private boolean trussFront = false;
     private boolean parkFrozen = false;
 
     // Declare drive state machine enums and variables {
@@ -82,11 +84,14 @@ public class AutoCode extends OpMode
         TURN_RIGHT,
         DRIVE_TO_BACKBOARD1,
         DRIVE_TO_BACKBOARD2,
-        DROP_BACKBOARD,
+        BACKBOARD_MOVE_CENTER,
+        BACKBOARD_MOVE_RIGHT,
+        BACKBOARD_MOVE_LEFT,
+        DROP_BACKBOARD_0_PREPICKUP,
         PARK_RIGHT,
         PARK_LEFT,
         END,
-        TEST_TURN,
+        // TEST_TURN,
     };
     
     private DriveState CurrentDriveState;
@@ -101,6 +106,12 @@ public class AutoCode extends OpMode
     private boolean propLeft = false;
     private boolean propRight = false;
     private boolean propCenter = false;
+    private boolean backboardCenterMin = 0;
+    private boolean backboardCenterMax = 318727981;
+    private boolean backboardLeftMin = 0;
+    private boolean backboardLeftMax = 318727981;
+    private boolean backboardRightMin = 0;
+    private boolean backboardRightMax = 318727981;
     // }
     
     
@@ -127,7 +138,23 @@ public class AutoCode extends OpMode
      */
     @Override
     public void init_loop() {
-        if(gamepad1.b && !parkFrozen) {
+        if (gamepad1.a && !parkFrozen) { // unclear what parkFrozen is for, it is only used here
+            parkRight = true;
+            parkLeft = false;
+        } if (gamepad1.b && !parkFrozen) {
+            parkRight = false;
+            parkLeft = true;
+        } if (gamepad1.x && !parkFrozen) {
+            parkRight = false;
+            parkLeft = false;
+        } if (gamepad1.left_bumper && !parkFrozen) {
+            trussBack = true;
+            trussFront = false;
+        } if (gamepad1.right_bumper && !parkFrozen) {
+            trussBack = false;
+            trussFront = true;
+        }
+        /* if(gamepad1.b && !parkFrozen) {
             parkRight = true;
             parkLeft = false;
         }
@@ -141,7 +168,7 @@ public class AutoCode extends OpMode
         }
         if(gamepad1.guide) {
             parkFrozen = !parkFrozen;
-        }
+        } */
         telemetry.addData("parkState","parkRight: " + parkRight + " parkLeft: " + parkLeft + " parkFrozen: " + parkFrozen);
         telemetry.update();
     }
@@ -170,10 +197,11 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } 
                 if (true) { // Because we not want to immedatly start
-                    newDriveState(DriveState.TEST_TURN);
+                    // newDriveState(DriveState.TEST_TURN);
+                    newDriveState(DriveState.CLEAR_TRUSS)
                 }
                 break;
-            case TEST_TURN:
+            /* case TEST_TURN:
                 telemetry.addData("Drive state", "Test turn");
                 if (InitDriveState) {
                     robot.gyroStrafe(-90, 0.5);
@@ -181,7 +209,7 @@ public class AutoCode extends OpMode
                 if (true) {
                     robot.gyroStrafe(-90, 0.5);
                 }
-                break;
+                break; */
             case CLEAR_TRUSS:
                 telemetry.addData("Drive state", "Clearing Truss");
                 if (InitDriveState)
@@ -436,25 +464,57 @@ public class AutoCode extends OpMode
             case DRIVE_TO_BACKBOARD2:
                 telemetry.addData("Drive state", "Drive to Backboard 2");
                 if (InitDriveState) {
-                    robot.gyroDrive(90, 0.5);
+                    robot.gyroDrive(-90, 0.5);
                     InitDriveState = false;
                 }
-                if (true) {
-                    if (gotDistance(5, true)) {
-                        robot.setDrivePower(0, 0, 0, 0);
-                        newDriveState(DriveState.DROP_BACKBOARD);
-                    } else {
-
+                if (gotDistance(5, true)) {
+                    robot.setDrivePower(0, 0, 0, 0);
+                    if (propCenter) {
+                        newDriveState(DriveState.BACKBOARD_MOVE_CENTER);
+                    } else if (propLeft) {
+                        newDriveState(DriveState.BACKBOARD_MOVE_LEFT);
+                    } else if (propRight) {
+                        newDriveState(DriveState.BACKBOARD_MOVE_RIGHT);
                     }
+                } else {
+
                 }
-            case DROP_BACKBOARD:
-                telemetry.addData("Arm state", "Drop Backboard");
+            case BACKBOARD_MOVE_CENTER:
+                telemetry.addData("Drive state", "Backboard move center");
                 if (InitDriveState) {
                     InitDriveState = false;
                 }
                 if (true) {
-                    newDriveState(DriveState.END);
+                    newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
                 }
+            case BACKBOARD_MOVE_LEFT:
+                telemetry.addData("Drive state", "Backboard move left");
+                if (InitDriveState) {
+                    InitDriveState = false;
+                }
+                if (true) {
+                    newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
+                }
+            case BACKBOARD_MOVE_RIGHT:
+                telemetry.addData("Drive state", "Backboard move right");
+                if (InitDriveState) {
+                    InitDriveState = false;
+                }
+                if (true) {
+                    newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
+                }
+            case DROP_BACKBOARD_0_PREPICKUP:
+                telemetry.addData("Arm state", "Backboard Drop 0; Prepickup");
+                if (InitDriveState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitDriveState = false;
+                }
+                if (robot.elbowWithinRange(robot.ELBOW_PREPICKUP)){
+                    newDriveState(DriveState.DROP_STEP1);
+                } else {
+                    armControl(robot.ELBOW_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
+                }
+                break;
             case PARK_RIGHT:
                 telemetry.addData("Drive state","Park Right");
                 if (InitDriveState)  // Start Starting
