@@ -112,10 +112,10 @@ public class RobotHardware
   public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
   public double RIGHT_GRIP_CLOSED = 0.12;  // right grip closes on low
-  public double RIGHT_GRIP_DROP1 = 0.175;
+  // public double RIGHT_GRIP_DROP1 = 0.175;
   public double RIGHT_GRIP_OPEN = 0.25;
   public double LEFT_GRIP_CLOSED = 0.75;  // left grip closes on high
-  public double LEFT_GRIP_DROP1 = 0.685;
+  // public double LEFT_GRIP_DROP1 = 0.685;
   public double LEFT_GRIP_OPEN = 0.6;
   public double PROPORTIONAL_GAIN = 0.03;
   public double CHECK_DELAY = 20;
@@ -273,10 +273,14 @@ public class RobotHardware
    * Set the position of the gripper servos together
    * @param position The position of the grippers
    */
-  public void setGripperPosition(double left_pos, double right_pos) {
-    lg_servo.setPosition(left_pos);
-    rg_servo.setPosition(right_pos);
-    telemetry.addData("RobotHardware","lg position: (%.2f); rg position: (%.2f) ",  left_pos, right_pos);
+  public void setRightGripperPosition(double pos) {
+    rg_servo.setPosition(pos);
+    telemetry.addData("RobotHardware","rg position: (%.2f); right_pos);
+  }
+  
+  public void setLeftGripperPosition(double pos) {
+    rg_servo.setPosition(pos);
+    telemetry.addData("RobotHardware","lg position: (%.2f); left_pos);
   }
 
   public void driveRobot(double forwardSpeed, double turnSpeed, double strafeSpeed, boolean slowmode_state) {
