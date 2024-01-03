@@ -77,6 +77,12 @@ public class TeleopCode extends OpMode
     
     private boolean d1Launch_btn = false;
     private boolean d2Launch_btn = false;
+    
+    private boolean d1Release_btn = false;
+    private boolean d2Release_btn = false;
+    
+    private boolean d1Pull_btn = false;
+    private boolean d2Pull_btn = false;
     // }
     
     // Declare general global variables {
@@ -122,6 +128,24 @@ public class TeleopCode extends OpMode
     private ElapsedTime DriveStateTime = new ElapsedTime();
     // }
     
+    // Declare LIFTA state machine enums and variables {
+    private enum LIFTAState {
+        LIFTA_STATE_INIT,
+        LIFTA_STATE_WAITING,
+        LIFTA_STATE_RELEASE,
+        LIFTA_STATE_PULL_CONTROL,
+        LIFTA_STATE_PULL_HOLD,
+        LIFTA_STATE_END      // Might not need, there for structure's sake
+    };
+    
+    private LIFTAState CurrentLIFTAState;
+    private boolean InitLIFTAState = false;
+    private ElapsedTime LIFTAStateTime = new ElapsedTime();
+    
+    private int leftLiftMotorHold = 0;
+    private int rightLiftMotorHold = 0;
+    // }
+    
     // }
     /*
      * Code to run ONCE when the driver hits INIT
@@ -138,6 +162,7 @@ public class TeleopCode extends OpMode
         // Initialize states for state machines {
         newDriveState(DriveState.DRIVE_STATE_INIT);
         newArmState(ArmState.ARM_STATE_INIT);
+        newLIFTAState(LIFTAState.LIFTA_STATE_INIT);
         // }
     }
 
@@ -222,6 +247,18 @@ public class TeleopCode extends OpMode
         d2Launch_btn = gamepad2.guide;
         
         telemetry.addData("Launch Buttons", "D1(center): " + d1Launch_btn + ", D2(Center): " + d2Launch_btn );
+        
+        // lifting release buttons
+        d1Release_btn = gamepad1.back;
+        d2Release_btn = gamepad2.back;
+        
+        telemetry.addData("Lifting Release Buttons", "D1(left of center): " + d1Release_btn + ", D2(left of center): " + d2Release_btn );
+        
+        // lifting pull buttons
+        d1Pull_btn = gamepad1.dpad_down;
+        d2Pull_btn = gamepad2.dpad_down;
+        
+        telemetry.addData("Lifting Pull Buttons", "D1(dpad dn): " + d1Pull_btn + ", D2(dpad dn): " + d2Pull_btn );
          
         // }
         
@@ -240,7 +277,7 @@ public class TeleopCode extends OpMode
             case ARM_STATE_MANUAL://{
                 telemetry.addData("Arm state", "Manual");
                 if (InitArmState) {
-                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // TODO: Check if RUN_USING_ENCODER is correct or if we should use RUN_USING_ENCODERS
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     InitArmState = false;
                 } 
                 if (tuck_pos_btn) {
@@ -250,10 +287,10 @@ public class TeleopCode extends OpMode
                 } else if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = robot.elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
-                } else if (reset_btn_press) {
+                }/* else if (reset_btn_press) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     InitArmState = true; // Probably bad practice, but oh well
-                }else {
+                }*/else {
                     robot.setElbowPower(elbow_joy * robot.ELBOW_SENSITIVITY);
                     wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
                     wristPlace = Range.clip(wristPlace, 0, 1);
@@ -410,6 +447,65 @@ public class TeleopCode extends OpMode
                 }
                 break;
         }
+        switch (CurrentLIFTAState) {
+            case LIFTA_STATE_INIT:
+                telemetry.addData("LIFTA state", "Init");
+                if (InitLIFTAState) {
+                    InitLIFTAState = false;
+                }
+                if (true) {
+                    newLIFTAState(LIFTAState.LIFTA_STATE_WAITING);
+                }
+                break;
+            case LIFTA_STATE_WAITING:
+                telemetry.addData("LIFTA state", "Waiting");
+                if (InitLIFTAState) {
+                    InitLIFTAState = false;
+                }
+                if (d1Release_btn && d2Release_btn) {
+                    newLIFTAState(LIFTAState.LIFTA_STATE_RELEASE);
+                }
+                break;
+            case LIFTA_STATE_RELEASE:
+                telemetry.addData("LIFTA state", "Release");
+                if (InitLIFTAState) {
+                    InitLIFTAState = false;
+                }
+                if (true) {
+                    robot.releaseHangServos();
+                    leftLiftMotorHold = robot.left_hang_motor.getCurrentPosition();
+                    rightLiftMotorHold = robot.right_hang_motor.getCurrentPosition();
+                    newLIFTAState(LIFTAState.LIFTA_STATE_PULL_HOLD);
+                }
+                break;
+            case LIFTA_STATE_PULL_HOLD:
+                if (InitLIFTAState) {
+                    robot.left_hang_motor.setTargetPosition(leftLiftMotorHold);
+                    robot.right_hang_motor.setTargetPosition(rightLiftMotorHold);
+                    robot.left_hang_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    robot.right_hang_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    robot.setHangPower(0.3);
+                    InitLIFTAState = false;
+                }
+                if (d1Pull_btn || d2Pull_btn) {
+                     newLIFTAState(LIFTAState.LIFTA_STATE_PULL_CONTROL);
+                }
+                break;
+            case LIFTA_STATE_PULL_CONTROL:
+                if (InitLIFTAState) {
+                    robot.left_hang_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    robot.right_hang_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    robot.setHangPower(0.2);
+                    InitLIFTAState = false;
+                }
+                if (!(d1Pull_btn || d2Pull_btn)) {
+                    robot.setHangPower(0);
+                    leftLiftMotorHold = robot.left_hang_motor.getCurrentPosition();
+                    rightLiftMotorHold = robot.right_hang_motor.getCurrentPosition();
+                    newLIFTAState(LIFTAState.LIFTA_STATE_PULL_HOLD);
+                }
+                break;
+        }
         
         
         // this is the launch code
@@ -447,6 +543,12 @@ public class TeleopCode extends OpMode
         ArmStateTime.reset();
         CurrentArmState = newState;
         InitArmState = true;
+    }
+    
+    private void newLIFTAState(LIFTAState newState) {
+        LIFTAStateTime.reset();
+        CurrentLIFTAState = newState;
+        InitLIFTAState = true;
     }
     
     private void gripperControl(boolean wide_btn, boolean mid_btn) {

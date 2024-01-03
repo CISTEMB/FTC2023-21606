@@ -61,10 +61,14 @@ public class RobotHardware
   public DcMotor lb_motor = null;
   public DcMotor rb_motor = null;
   public DcMotor elbow_motor = null;
+  public DcMotor left_hang_motor = null;
+  public DcMotor right_hang_motor = null;
   public Servo wrist_servo = null;
   public Servo lg_servo = null; 
   public Servo rg_servo = null;
   public Servo launch_servo = null;
+  public Servo left_hang_servo = null;
+  public Servo right_hang_servo = null;
   public ColorSensor clrl_sensor = null;
   public DistanceSensor leftd_sensor = null;
   public DistanceSensor rightd_sensor = null;
@@ -119,6 +123,11 @@ public class RobotHardware
   public double LEFT_GRIP_OPEN = 0.6;
   public double PROPORTIONAL_GAIN = 0.03;
   public double CHECK_DELAY = 20;
+  
+  public double LEFT_HANG_SERVO_INIT = 0;
+  public double RIGHT_HANG_SERVO_INIT = 1;
+  public double LEFT_HANG_SERVO_RELEASE = 1;
+  public double RIGHT_HANG_SERVO_RELEASE = 0;
   // }
   
   // declare constants for autonomous {
@@ -164,10 +173,14 @@ public class RobotHardware
       lb_motor = hardwareMap.get(DcMotor.class, "LB_MOTOR");
       rb_motor = hardwareMap.get(DcMotor.class, "RB_MOTOR");
       elbow_motor = hardwareMap.get(DcMotor.class, "ELBOW_MOTOR");   
+      left_hang_motor = hardwareMap.get(DcMotor.class, "LEFT_HANG_MOTOR");
+      right_hang_motor = hardwareMap.get(DcMotor.class, "RIGHT_HANG_MOTOR");
       wrist_servo = hardwareMap.get(Servo.class, "WRIST_SERVO");
       lg_servo = hardwareMap.get(Servo.class, "LG_SERVO");
       rg_servo = hardwareMap.get(Servo.class, "RG_SERVO");
       launch_servo = hardwareMap.get(Servo.class, "LAUNCH_SERVO");
+      left_hang_servo = hardwareMap.get(Servo.class, "LEFT_HANG_SERVO");
+      right_hang_servo = hardwareMap.get(Servo.class, "RIGHT_HANG_SERVO");
       clrl_sensor = hardwareMap.get(ColorSensor.class, "CLRL_SENSOR");
       leftd_sensor = hardwareMap.get(DistanceSensor.class, "LEFTD_SENSOR");
       rightd_sensor = hardwareMap.get(DistanceSensor.class, "RIGHTD_SENSOR");
@@ -179,18 +192,24 @@ public class RobotHardware
       lb_motor.setDirection(DcMotor.Direction.FORWARD);
       rb_motor.setDirection(DcMotor.Direction.REVERSE);
       elbow_motor.setDirection(DcMotor.Direction.FORWARD);
+      left_hang_motor.setDirection(DcMotor.Direction.REVERSE);
+      right_hang_motor.setDirection(DcMotor.Direction.REVERSE);
       
       lf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       rf_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       lb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       rb_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       elbow_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      left_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+      right_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
       
       
       lf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       rf_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       lb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       rb_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+      left_hang_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+      right_hang_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -204,6 +223,9 @@ public class RobotHardware
       RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
       imu.initialize(new IMU.Parameters(orientationOnRobot));
       resetIMU();
+      
+      left_hang_servo.setPosition(LEFT_HANG_SERVO_INIT);
+      right_hang_servo.setPosition(RIGHT_HANG_SERVO_INIT);
 
       telemetry.addData("RobotHardware","Initialized successfully!");
       initialized = true;
@@ -323,7 +345,7 @@ public class RobotHardware
   
   void updatePersistentTelemetry() {
     telemetry.addData("Gyro Heading", telHeading);
-    telemetry.addData("Elboy Position", telElbowPos);
+    telemetry.addData("Elbow Position", telElbowPos);
   }
   /*
   void composeIMUTelemetry() {
@@ -468,5 +490,17 @@ public class RobotHardware
             lastUpdateTime = System.currentTimeMillis();
         }
       } while (Math.abs(angle - currentAngle) > 1.0);
+    }
+    public void releaseHangServos() {
+      left_hang_servo.setPosition(LEFT_HANG_SERVO_RELEASE);
+      right_hang_servo.setPosition(RIGHT_HANG_SERVO_RELEASE);
+      telemetry.addData("RobotHardware","Hang servos released!");
+    }
+    public void setHangPower(double power) {
+      left_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      right_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      left_hang_motor.setPower(power);
+      right_hang_motor.setPower(power);
+      telemetry.addData("RobotHardware","Hang motor power: (%.2f)",power);
     }
 }

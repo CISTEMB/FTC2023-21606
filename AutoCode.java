@@ -410,7 +410,7 @@ public class AutoCode extends OpMode
                     turn(0.5, -0.5);
                     if (gotAngle(90,true)) {
                         robot.setDrivePower(0, 0, 0, 0);
-                        newDriveState(DriveState.DRIVE_TO_BACKBOARD);
+                        newDriveState(DriveState.DRIVE_TO_BACKBOARD1);
                     } else {
                         
                     }
@@ -506,7 +506,7 @@ public class AutoCode extends OpMode
      */
     @Override
     public void stop() {
-        telemetry.addData("the robot", "how dare you stop me");
+        telemetry.addData("the robot", "i wont hold back"); // YOUR NEXT
         telemetry.update();
     }
 
