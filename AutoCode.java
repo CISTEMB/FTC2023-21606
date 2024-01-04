@@ -106,12 +106,12 @@ public class AutoCode extends OpMode
     private boolean propLeft = false;
     private boolean propRight = false;
     private boolean propCenter = false;
-    private boolean backboardCenterMin = 0;
-    private boolean backboardCenterMax = 318727981;
-    private boolean backboardLeftMin = 0;
-    private boolean backboardLeftMax = 318727981;
-    private boolean backboardRightMin = 0;
-    private boolean backboardRightMax = 318727981;
+    private double backboardCenterMin = 0;
+    private double backboardCenterMax = 318727981;
+    private double backboardLeftMin = 0;
+    private double backboardLeftMax = 318727981;
+    private double backboardRightMin = 0;
+    private double backboardRightMax = 318727981;
     // }
     
     
@@ -198,7 +198,7 @@ public class AutoCode extends OpMode
                 } 
                 if (true) { // Because we not want to immedatly start
                     // newDriveState(DriveState.TEST_TURN);
-                    newDriveState(DriveState.CLEAR_TRUSS)
+                    newDriveState(DriveState.CLEAR_TRUSS);
                 }
                 break;
             /* case TEST_TURN:
