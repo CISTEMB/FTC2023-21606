@@ -105,22 +105,22 @@ public class RobotHardware
 
   public double WRIST_TUCK = 0;  // reverse for old robot
   public int ELBOW_TUCK = 0;
-  public int ELBOW_PRETUCK = 150;
-  public int ELBOW_PREPICKUP = 190;
+  public int ELBOW_PRETUCK = 20;
+  public int ELBOW_PREPICKUP = 20;
   public int PRETUCK_RANGE = 10;
   public double WRIST_BACK = 0.4;   
   public int ELBOW_BACK = 508;
   public double WRIST_PICKUP = 1;
-  public int ELBOW_PICKUP = 30;
+  public int ELBOW_PICKUP = 0;
   public double ELBOW_MAX_SPEED = .75;
   public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
-  public double RIGHT_GRIP_CLOSED = 0.75;  // right grip closes on low
+  public double RIGHT_GRIP_CLOSED = 0.5;  // right grip closes on high
   // public double RIGHT_GRIP_DROP1 = 0.175;
   public double RIGHT_GRIP_OPEN = 0.2;
-  public double LEFT_GRIP_CLOSED = 0.35;  // left grip closes on high
+  public double LEFT_GRIP_CLOSED = 0.38; //0.35 ;  // left grip closes on low
   // public double LEFT_GRIP_DROP1 = 0.685;
-  public double LEFT_GRIP_OPEN = 0.8;
+  public double LEFT_GRIP_OPEN = 0.65; //0.8;
   public double PROPORTIONAL_GAIN = 0.03;
   public double CHECK_DELAY = 20;
   
@@ -215,6 +215,8 @@ public class RobotHardware
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
       wrist_servo.setPosition(0);
       // TOFIX setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
+      setLeftGripperPosition(LEFT_GRIP_CLOSED);
+      setRightGripperPosition(RIGHT_GRIP_CLOSED);
       
       launch_servo.setPosition(HOLD_DRONE);
 
@@ -301,7 +303,7 @@ public class RobotHardware
   }
   
   public void setLeftGripperPosition(double pos) {
-    rg_servo.setPosition(pos);
+    lg_servo.setPosition(pos);
     telemetry.addData("RobotHardware","lg position: (%.2f)", pos);
   }
 
