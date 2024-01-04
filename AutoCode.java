@@ -382,7 +382,7 @@ public class AutoCode extends OpMode
                 telemetry.addData("Arm state", "Drop step 2");
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 1000;
-                    robot.setGripperPosition(robot.LEFT_GRIP_OPEN, robot.RIGHT_GRIP_OPEN);
+                    // TOFIX robot.setGripperPosition(robot.LEFT_GRIP_OPEN, robot.RIGHT_GRIP_OPEN);
                     InitDriveState = false;
                 }
                 if (DriveStateTime.milliseconds() > waitTime) {
@@ -411,7 +411,7 @@ public class AutoCode extends OpMode
                 telemetry.addData("Arm state", "Drop step 4");
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 1000;
-                    robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
+                    // TOFIX robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
                 }

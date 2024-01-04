@@ -214,7 +214,7 @@ public class RobotHardware
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
       wrist_servo.setPosition(0);
-      setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
+      // TOFIX setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
       
       launch_servo.setPosition(HOLD_DRONE);
 
@@ -297,12 +297,12 @@ public class RobotHardware
    */
   public void setRightGripperPosition(double pos) {
     rg_servo.setPosition(pos);
-    telemetry.addData("RobotHardware","rg position: (%.2f); right_pos);
+    telemetry.addData("RobotHardware","rg position: (%.2f)", pos);
   }
   
   public void setLeftGripperPosition(double pos) {
     rg_servo.setPosition(pos);
-    telemetry.addData("RobotHardware","lg position: (%.2f); left_pos);
+    telemetry.addData("RobotHardware","lg position: (%.2f)", pos);
   }
 
   public void driveRobot(double forwardSpeed, double turnSpeed, double strafeSpeed, boolean slowmode_state) {

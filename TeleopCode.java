@@ -239,12 +239,12 @@ public class TeleopCode extends OpMode
         } else {
             right_grip_btn = false;
         }
-		if (gamepad2.left_trigger > .5 || gamepad1.left_trigger > .5) {
+        if (gamepad2.left_trigger > .5 || gamepad1.left_trigger > .5) {
             left_grip_btn = true;
         } else {
             left_grip_btn = false;
         }
-		
+        
         // grip_mid_btn = (gamepad2.right_bumper||gamepad1.right_bumper);
         telemetry.addData("Grip Buttons", "right (rt): " + right_grip_btn + "; left (lt): " + left_grip_btn );
         
@@ -559,18 +559,18 @@ public class TeleopCode extends OpMode
     
     private void gripperControl(boolean right_btn, boolean left_btn) {
         if(right_btn) {
-			robot.setRightGripperPosition(robot.RIGHT_GRIP_OPEN);
-		} else {
-			robot.setRightGripperPosition(robot.RIGHT_GRIP_CLOSED);
-		}
-		if(left_btn) {
-			robot.setLeftGripperPosition(robot.LEFT_GRIP_OPEN);
-		} else {
-			robot.setLeftGripperPosition(robot.LEFT_GRIP_CLOSED);
-		}
-		telemetry.addData("Gripper", "lg: " + left_btn + ", rg: " + right_btn);
-		/* old gripper code
-		if (mid_btn) {
+            robot.setRightGripperPosition(robot.RIGHT_GRIP_OPEN);
+        } else {
+            robot.setRightGripperPosition(robot.RIGHT_GRIP_CLOSED);
+        }
+        if(left_btn) {
+            robot.setLeftGripperPosition(robot.LEFT_GRIP_OPEN);
+        } else {
+            robot.setLeftGripperPosition(robot.LEFT_GRIP_CLOSED);
+        }
+        telemetry.addData("Gripper", "lg: " + left_btn + ", rg: " + right_btn);
+        /* old gripper code
+        if (mid_btn) {
             robot.setGripperPosition(robot.LEFT_GRIP_DROP1,robot.RIGHT_GRIP_DROffP1);
             //robot.setGripperPosition(.75, .25);
             //robot.setGripperPosition(1,1);
