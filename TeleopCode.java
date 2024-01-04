@@ -68,8 +68,8 @@ public class TeleopCode extends OpMode
     private boolean reset_btn_old = false;
     private boolean reset_btn_press = false;
     
-    private boolean grip_wide_btn;
-    private boolean grip_mid_btn;
+    private boolean right_grip_btn;
+    private boolean left_grip_btn;
     
     private boolean slowmode_btn = false;
     private boolean slowmode_btn_old = false;
@@ -235,12 +235,18 @@ public class TeleopCode extends OpMode
         telemetry.addData("Pos Btns", "pu(y): " + pickup_pos_btn + ", tuck(a): " + tuck_pos_btn + ", back(b): " + back_pos_btn + back_pos_btn_press);
         
         if (gamepad2.right_trigger > .5 || gamepad1.right_trigger > .5) {
-            grip_wide_btn = true;
+            right_grip_btn = true;
         } else {
-            grip_wide_btn = false;
+            right_grip_btn = false;
         }
-        grip_mid_btn = (gamepad2.right_bumper||gamepad1.right_bumper);
-        telemetry.addData("Grip Buttons", "wide(rt): " + grip_wide_btn + ", mid(rb): " + grip_mid_btn );
+		if (gamepad2.left_trigger > .5 || gamepad1.left_trigger > .5) {
+            left_grip_btn = true;
+        } else {
+            left_grip_btn = false;
+        }
+		
+        // grip_mid_btn = (gamepad2.right_bumper||gamepad1.right_bumper);
+        telemetry.addData("Grip Buttons", "right (rt): " + right_grip_btn + "; left (lt): " + left_grip_btn );
         
         // launcher buttons
         d1Launch_btn = gamepad1.guide;
@@ -296,7 +302,7 @@ public class TeleopCode extends OpMode
                     wristPlace = Range.clip(wristPlace, 0, 1);
                     robot.setWristPosition(wristPlace);
                     
-                    gripperControl(grip_wide_btn, grip_mid_btn);
+                    gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
             case ARM_STATE_ELBOW_HOLD://{
@@ -323,7 +329,7 @@ public class TeleopCode extends OpMode
                     telemetry.addData("Wrist location", wristPlace);
                     telemetry.addData("Elbow Location", robot.elbow_motor.getCurrentPosition());
                     
-                    gripperControl(grip_wide_btn, grip_mid_btn);
+                    gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
             
@@ -343,7 +349,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else {
                     armControl (robot.ELBOW_PRETUCK_MAX_SPEED, robot.ELBOW_PRETUCK,  wristPlace , 0);
-                    //gripperControl(grip_wide_btn, grip_mid_btn);
+                    // gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
                 
@@ -363,7 +369,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 } else {
                     armControl (robot.ELBOW_PRETUCK_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
-                    //gripperControl(grip_wide_btn, grip_mid_btn);
+                    // gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
                 
@@ -382,7 +388,7 @@ public class TeleopCode extends OpMode
                 }
                 else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , .02);
-                    //gripperControl(grip_wide_btn, grip_mid_btn);
+                    // gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
             
@@ -400,7 +406,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PREPICKUP);
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_BACK, robot.WRIST_BACK, .004);
-                    gripperControl(grip_wide_btn, grip_mid_btn);
+                    gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
             
@@ -418,7 +424,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .1);
-                    gripperControl(grip_wide_btn, grip_mid_btn);
+                    gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
          }
@@ -551,9 +557,21 @@ public class TeleopCode extends OpMode
         InitLIFTAState = true;
     }
     
-    private void gripperControl(boolean wide_btn, boolean mid_btn) {
-        if (mid_btn) {
-            robot.setGripperPosition(robot.LEFT_GRIP_DROP1,robot.RIGHT_GRIP_DROP1);
+    private void gripperControl(boolean right_btn, boolean left_btn) {
+        if(right_btn) {
+			robot.setRightGripperPosition(robot.RIGHT_GRIP_OPEN);
+		} else {
+			robot.setRightGripperPosition(robot.RIGHT_GRIP_CLOSED);
+		}
+		if(left_btn) {
+			robot.setLeftGripperPosition(robot.LEFT_GRIP_OPEN);
+		} else {
+			robot.setLeftGripperPosition(robot.LEFT_GRIP_CLOSED);
+		}
+		telemetry.addData("Gripper", "lg: " + left_btn + ", rg: " + right_btn);
+		/* old gripper code
+		if (mid_btn) {
+            robot.setGripperPosition(robot.LEFT_GRIP_DROP1,robot.RIGHT_GRIP_DROffP1);
             //robot.setGripperPosition(.75, .25);
             //robot.setGripperPosition(1,1);
             telemetry.addData ("GC", "mid");
@@ -563,7 +581,7 @@ public class TeleopCode extends OpMode
         } else {
             robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
              telemetry.addData ("GC" ," clodes");
-        }
+        } */
     }
     
     private void armControl (double power, int elbow, double wrist, double wristStep) {
