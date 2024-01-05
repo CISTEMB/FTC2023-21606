@@ -44,6 +44,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
+@Disabled
 @Autonomous(name="Test Auto Code", group="Practice", preselectTeleOp="Teleop Code")
 
 public class TestAutoCode extends OpMode

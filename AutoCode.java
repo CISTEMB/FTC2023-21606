@@ -74,8 +74,10 @@ public class AutoCode extends OpMode
         CENTER_MOVE_BACK,
         LEFT_MOVE_BACK,
         LEFT_STRAFE_TO_LINE,
+        LEFT_MOVE_BACK_AGAIN,
         RIGHT_MOVE_BACK,
         RIGHT_STRAFE_TO_LINE,
+        RIGHT_MOVE_BACK_AGAIN,
         DROP_STEP0_PREPICKUP,
         DROP_STEP1,
         DROP_STEP2,
@@ -290,7 +292,7 @@ public class AutoCode extends OpMode
                     speedDrive(-.1);
                     InitDriveState = false;
                 } 
-                if (gotDistance (-9, false)) {  // Time to leave
+                if (gotDistance (-7, false)) {  // Time to leave
                     speedDrive(0);
                     newDriveState(DriveState.LEFT_STRAFE_TO_LINE);
                 } else {  // Stick around
@@ -306,12 +308,28 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } else if (gotLine()) {  // Time to leave
                         stopDrive();
-                        newDriveState(DriveState.DROP_STEP0_PREPICKUP);
+                        newDriveState(DriveState.LEFT_MOVE_BACK_AGAIN);
                     
                 } else if (gotStrafeDistance(-10, false)){ // todo make 40
                     newDriveState(DriveState.END);
                 }
                 else {        // Stick around
+                }
+                break;
+                
+        case  LEFT_MOVE_BACK_AGAIN:
+                telemetry.addData("Drive state", "Left move back again");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(-.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (-2, false)) {  // Time to leave
+                    speedDrive(0);
+                    newDriveState(DriveState.DROP_STEP0_PREPICKUP);
+                } else {  // Stick around
+                    
                 }
                 break;
                 
@@ -323,7 +341,7 @@ public class AutoCode extends OpMode
                     speedDrive(-.1);
                     InitDriveState = false;
                 } 
-                if (gotDistance (-9, false)) {  // Time to leave
+                if (gotDistance (-7, false)) {  // Time to leave
                     speedDrive(0);
                     newDriveState(DriveState.RIGHT_STRAFE_TO_LINE);
                 } else {  // Stick around
@@ -340,12 +358,28 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } else if (gotLine()) {  // Time to leave
                         stopDrive();
-                        newDriveState(DriveState.DROP_STEP0_PREPICKUP);
+                        newDriveState(DriveState.RIGHT_MOVE_BACK_AGAIN);
                     
                 } else if (gotStrafeDistance(10, true)){ 
                     newDriveState(DriveState.END);
                 }
                 else {        // Stick around
+                }
+                break;
+                
+        case  RIGHT_MOVE_BACK_AGAIN:
+                telemetry.addData("Drive state", "right move back again");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    speedDrive(-.1);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (-2, false)) {  // Time to leave
+                    speedDrive(0);
+                    newDriveState(DriveState.DROP_STEP0_PREPICKUP);
+                } else {  // Stick around
+                    
                 }
                 break;
         
