@@ -501,7 +501,7 @@ public class TeleopCode extends OpMode
                 if (InitLIFTAState) {
                     robot.left_hang_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     robot.right_hang_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    robot.setHangPower(0.2);
+                    robot.setHangPower(0.3);
                     InitLIFTAState = false;
                 }
                 if (!(d1Pull_btn || d2Pull_btn)) {
