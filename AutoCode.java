@@ -59,17 +59,47 @@ public class AutoCode extends OpMode
     private int elbowHold = 0;
     private double waitTime;
     
-    private boolean parkRight = false;
-    private boolean parkLeft = false;
-    private boolean trussBack = false;
-    private boolean trussFront = false;
-    private boolean parkFrozen = false;
+    private boolean side_btn;                // current btn state
+    private boolean side_btn_old = false;    // prev btn state
+    private boolean side_btn_press = false;  // when btn changes from false to true
+    private boolean color_btn;
+    private boolean color_btn_old = false;
+    private boolean color_btn_press = false;
+    private boolean back_pixel_btn = false;
+    private boolean back_pixel_btn_old= false;
+    private boolean back_pixel_btn_press = false;
+    private boolean park_btn = false;
+    private boolean park_btn_old = false;
+    private boolean park_btn_press = false;
+    
+    private boolean backPixel = false;
+    private boolean park = false; 
 
+    private enum Color {
+        RED,
+        BLUE
+    }
+    private Color colorSetting = Color.RED;
+    
+    private enum Side {
+        BACKDROP,
+        AIRSTRIP
+    }
+    private Side sideSetting = Side.BACKDROP;
+    
+    private enum Prop {
+        LEFT,
+        RIGHT,
+        CENTER,
+        UNKNOWN
+    }
+    private Prop propLocation = Prop.UNKNOWN;
+    
     // Declare drive state machine enums and variables {
     private enum DriveState {
         INIT,
-        CLEAR_TRUSS,
-        FIND_LINE,
+        CLEAR_TRUSS_10,
+        FIND_LINE_20,
         CENTER_PUSH_PROP,
         CENTER_MOVE_BACK,
         LEFT_MOVE_BACK,
@@ -140,39 +170,81 @@ public class AutoCode extends OpMode
      */
     @Override
     public void init_loop() {
-        if (gamepad1.a && !parkFrozen) { // unclear what parkFrozen is for, it is only used here
-            parkRight = true;
-            parkLeft = false;
-        } if (gamepad1.b && !parkFrozen) {
-            parkRight = false;
-            parkLeft = true;
-        } if (gamepad1.x && !parkFrozen) {
-            parkRight = false;
-            parkLeft = false;
-        } if (gamepad1.left_bumper && !parkFrozen) {
-            trussBack = true;
-            trussFront = false;
-        } if (gamepad1.right_bumper && !parkFrozen) {
-            trussBack = false;
-            trussFront = true;
+        back_pixel_btn = gamepad2.a;
+        if (!back_pixel_btn_old && back_pixel_btn) {
+            back_pixel_btn_press = true;
+        } else {
+            back_pixel_btn_press = false;
         }
-        /* if(gamepad1.b && !parkFrozen) {
-            parkRight = true;
-            parkLeft = false;
+        back_pixel_btn_old = back_pixel_btn;
+        
+        color_btn = gamepad2.y;
+        if (!color_btn_old && color_btn) {
+            color_btn_press = true;
+        } else {
+            color_btn_press = false;
         }
-        if(gamepad1.x && !parkFrozen) {
-            parkRight = false;
-            parkLeft = true;
+        color_btn_old = color_btn;
+        
+        park_btn = gamepad2.x;
+        if (!park_btn_old && park_btn) {
+            park_btn_press = true;
+        } else {
+            park_btn_press = false;
         }
-        if(gamepad1.a && !parkFrozen) {
-            parkRight = false;
-            parkLeft = false;
+        park_btn_old = park_btn;
+        
+        side_btn = gamepad2.b;
+        if (!side_btn_old && side_btn) {
+            side_btn_press = true;
+        } else {
+            side_btn_press = false;
         }
-        if(gamepad1.guide) {
-            parkFrozen = !parkFrozen;
-        } */
-        telemetry.addData("parkState","parkRight: " + parkRight + " parkLeft: " + parkLeft + " parkFrozen: " + parkFrozen);
+        side_btn_old = side_btn;
+        
+        if(back_pixel_btn_press) {
+            backPixel = !backPixel;
+        }
+        
+        if(park_btn_press) {
+            park = !park;
+        }
+        
+        if(color_btn_press) {
+            switch(colorSetting) {
+                case RED:
+                    colorSetting = Color.BLUE;
+                    break;            
+                case BLUE:
+                    colorSetting = Color.RED;
+                    break;
+            }
+        }
+        
+        if(side_btn_press) {
+            switch(sideSetting) {
+                case BACKDROP:
+                    sideSetting = Side.AIRSTRIP;
+                    break;            
+                case AIRSTRIP:
+                    sideSetting = Side.BACKDROP;
+                    break;
+            }
+        }
+        
+        
+        telemetryConfig();
+        telemetry.addData("----Status----","");
+        telemetry.addData("Gyro",robot.getAngle());
         telemetry.update();
+    }
+    
+    public void telemetryConfig() {
+        telemetry.addData("----Configuration----","");
+        telemetry.addData("(Y) Color", colorSetting==Color.RED ? "Red" : "Blue");
+        telemetry.addData("(B) Side", sideSetting==Side.BACKDROP ? "Backdrop" : "Airstrip");
+        telemetry.addData("(A) Back pixel", backPixel ? "Yes" : "No");
+        telemetry.addData("(X) Parking", park ? "Yes" : "No");
     }
 
     /*
@@ -200,7 +272,7 @@ public class AutoCode extends OpMode
                 } 
                 if (true) { // Because we not want to immedatly start
                     // newDriveState(DriveState.TEST_TURN);
-                    newDriveState(DriveState.CLEAR_TRUSS);
+                    newDriveState(DriveState.CLEAR_TRUSS_10);
                 }
                 break;
             /* case TEST_TURN:
@@ -212,7 +284,7 @@ public class AutoCode extends OpMode
                     robot.gyroStrafe(-90, 0.5);
                 }
                 break; */
-            case CLEAR_TRUSS:
+            case CLEAR_TRUSS_10:
                 telemetry.addData("Drive state", "Clearing Truss");
                 if (InitDriveState)
                 {
@@ -220,14 +292,14 @@ public class AutoCode extends OpMode
                     speedDrive(.5);
                     InitDriveState = false;
                 } 
-                if (gotDistance (24, true)) {  // Time to leave
-                    newDriveState(DriveState.FIND_LINE);
+                if (gotDistance (28, true)) {  // Time to leave
+                    newDriveState(DriveState.FIND_LINE_20);
                 } else {  // Stick around
                     
                 }
                 break;
                 
-            case FIND_LINE:
+            case FIND_LINE_20:
                 telemetry.addData("Drive state","Find Line");
                 if (InitDriveState)  // Start Starting
                 {
@@ -244,7 +316,7 @@ public class AutoCode extends OpMode
                     else {
                         newDriveState(DriveState.END);
                     }
-                } else if (gotDistance(55, true)){
+                } else if (gotDistance(20, true)){
                     newDriveState(DriveState.END);
                 }
                 else {        // Stick around
@@ -451,9 +523,9 @@ public class AutoCode extends OpMode
                 }
                 if (robot.elbowWithinRange(robot.ELBOW_TUCK) &&
                     DriveStateTime.milliseconds() > waitTime) {
-                    if(parkRight){
+                    if(0==1){
                         newDriveState(DriveState.PARK_RIGHT);
-                    } else if(parkLeft){
+                    } else if(0==1){
                         newDriveState(DriveState.PARK_LEFT);
                     } else{
                         newDriveState(DriveState.END);  
@@ -589,6 +661,8 @@ public class AutoCode extends OpMode
 
         // Show the elapsed game time and wheel power.
         robot.updatePersistentTelemetry();
+        telemetryConfig();
+        
         telemetry.addData("Distances", "left: (%.2f); center: (%.2f); right: (%.2f);", minReadingLeft, minReadingCenter, minReadingRight);
         telemetry.addData("Prop Position", " left: " + propLeft + " center: " + propCenter + " right: " + propRight );
         telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -727,17 +801,11 @@ public class AutoCode extends OpMode
             minReadingRight = tempR;
         }
         if (minReadingLeft < minReadingRight && minReadingLeft < 8) {
-            propLeft = true;
-            propRight = false;
-            propCenter = false;
+            propLocation = Prop.LEFT;
         } else if (minReadingRight < minReadingLeft && minReadingRight < 8) {
-            propRight = true;
-            propLeft = false;
-            propCenter = false;
+            propLocation = Prop.RIGHT;
         } else {
-            propCenter = true;
-            propRight = false;
-            propLeft = false;
+            propLocation = Prop.CENTER;
         }
         
         
