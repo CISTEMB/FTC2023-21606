@@ -444,60 +444,64 @@ public class RobotHardware
       double currentAngle = getAngle();
       setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-      do {
-        // Update gyro readings only if enough time has passed
-        if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
-            currentAngle = getAngle();
-            double error = angle - currentAngle;
-            
-            double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
-            double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
-            double leftBackPower = speed - PROPORTIONAL_GAIN * error;
-            double rightBackPower = speed + PROPORTIONAL_GAIN * error;
-            
-            // Limit motor powers to the valid range (-1 to 1)
-            leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
-            rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
-            leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
-            rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
-            
-            // Apply motor powers to the motors
-            setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
-            
-            // Update the last update time
-            lastUpdateTime = System.currentTimeMillis();
-        }
-      } while (Math.abs(angle - currentAngle) > 1.0);
+      // Update gyro readings only if enough time has passed
+      if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
+          currentAngle = getAngle();
+          double error = angle - currentAngle;
+          
+          double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
+          double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
+          double leftBackPower = speed - PROPORTIONAL_GAIN * error;
+          double rightBackPower = speed + PROPORTIONAL_GAIN * error;
+          
+          // Limit motor powers to the valid range (-1 to 1)
+          leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
+          rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
+          leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
+          rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
+          
+          // Apply motor powers to the motors
+          setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+          
+          // Update the last update time
+          lastUpdateTime = System.currentTimeMillis();
+      }
+      if (Math.abs(angle - currentAngle) > 1.0) {
+        return true;
+      }
+      return false;
     }
     public void gyroStrafe(double angle, double speed) {
       long lastUpdateTime = System.currentTimeMillis();
       double currentAngle = getAngle();
       setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-      do {
-        // Update gyro readings only if enough time has passed
-        if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
-            currentAngle = getAngle();
-            double error = angle - currentAngle;
-            
-            double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
-            double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
-            double leftBackPower = -(speed - PROPORTIONAL_GAIN * error);
-            double rightBackPower = -(speed + PROPORTIONAL_GAIN * error);
-            
-            // Limit motor powers to the valid range (-1 to 1)
-            leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
-            rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
-            leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
-            rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
-            
-            // Apply motor powers to the motors
-            setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
-            
-            // Update the last update time
-            lastUpdateTime = System.currentTimeMillis();
-        }
-      } while (Math.abs(angle - currentAngle) > 1.0);
+      // Update gyro readings only if enough time has passed
+      if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
+          currentAngle = getAngle();
+          double error = angle - currentAngle;
+          
+          double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
+          double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
+          double leftBackPower = -(speed - PROPORTIONAL_GAIN * error);
+          double rightBackPower = -(speed + PROPORTIONAL_GAIN * error);
+          
+          // Limit motor powers to the valid range (-1 to 1)
+          leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
+          rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
+          leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
+          rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
+          
+          // Apply motor powers to the motors
+          setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+          
+          // Update the last update time
+          lastUpdateTime = System.currentTimeMillis();
+      }
+      if (Math.abs(angle - currentAngle) > 1.0) {
+        return true;
+      }
+      return false;
     }
     public void releaseHangServos() {
       left_hang_servo.setPosition(LEFT_HANG_SERVO_RELEASE);
