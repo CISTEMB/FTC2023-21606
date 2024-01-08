@@ -27,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+//{
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -42,7 +43,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
+//}
 
 /*
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
@@ -132,7 +133,6 @@ public class AutoCode extends OpMode
         END,
         // TEST_TURN,
     };
-    
     private DriveState CurrentDriveState;
     private boolean InitDriveState = false;
     private ElapsedTime DriveStateTime = new ElapsedTime();
@@ -153,7 +153,6 @@ public class AutoCode extends OpMode
     private double backboardRightMax = 318727981;
     // }
     
-    
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -166,10 +165,7 @@ public class AutoCode extends OpMode
             throw new RuntimeException("Initialization failed!");
         }
         robot.setWristPosition(wristPlace);
-        // Initialize states for state machines {
         newDriveState(DriveState.INIT);
-        //newArmState(ArmState.ARM_STATE_INIT);
-        // }
     }
 
     /*
@@ -177,6 +173,8 @@ public class AutoCode extends OpMode
      */
     @Override
     public void init_loop() {
+        
+        // Get buttons for UI {
         back_pixel_btn = gamepad2.a;
         if (!back_pixel_btn_old && back_pixel_btn) {
             back_pixel_btn_press = true;
@@ -237,14 +235,13 @@ public class AutoCode extends OpMode
                     sideSetting = Side.BACKDROP;
                     break;
             }
-        }
+        } //}
 
-        
-        
+        // Standard pre-init telemetry {
         telemetryConfig();
         telemetry.addData("----Status----","");
         telemetry.addData("Gyro",robot.getAngle());
-        telemetry.update();
+        telemetry.update(); //}
     }
     
     public void telemetryConfig() {
@@ -269,9 +266,11 @@ public class AutoCode extends OpMode
     @Override
     public void loop() {
         
-       switch (CurrentDriveState){
-            case INIT:
-                telemetry.addData("Drive state", "Init");
+        // Drive state state machine
+        switch (CurrentDriveState){
+            
+            case INIT: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.setDrivePower(0, 0, 0, 0);
@@ -282,10 +281,10 @@ public class AutoCode extends OpMode
                     newDriveState(DriveState.TEST_GYRO_DRIVE);
                     //newDriveState(DriveState.WRIST_DOWN_5);
                 }
-                break;
+                break; //}
             
-            case TEST_GYRO_DRIVE:
-                telemetry.addData("Drive state", "Clearing Truss_10");
+            case TEST_GYRO_DRIVE: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -298,10 +297,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                    robot.gyroDrive(.5, 0.0, 0.03); 
                 }
-                break;
+                break; //}
                 
-            case TEST_GYRO_STRAFE:   
-                telemetry.addData("Drive state", "Clearing Truss_10");
+            case TEST_GYRO_STRAFE: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -314,10 +313,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                    robot.gyroStrafe(.1, 0, 0.03); 
                 }
-                break;
+                break; //}
                 
-            case TEST_GYRO_TURN:    
-                telemetry.addData("Drive state", "Turn Right");
+            case TEST_GYRO_TURN: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     turn(0.5, -0.5);
                     InitDriveState = false;
@@ -329,10 +328,10 @@ public class AutoCode extends OpMode
                 } else {
                         
                 }
-                break;
+                break; //}
             
-            case WRIST_DOWN_5://{
-                telemetry.addData("Drive state", "Wrist Down_5");
+            case WRIST_DOWN_5: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds() + 2000;
                     robot.wrist_servo.setPosition(robot.WRIST_PICKUP);
@@ -343,10 +342,10 @@ public class AutoCode extends OpMode
                 } else {
                     
                 }
-                break;//}
+                break; //}
             
-            case CLEAR_TRUSS_10:
-                telemetry.addData("Drive state", "Clearing Truss_10");
+            case CLEAR_TRUSS_10: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -358,10 +357,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;
+                break; //}
                 
-            case FIND_LINE_20:
-                telemetry.addData("Drive state","Find Line");
+            case FIND_LINE_20: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)  // Start Starting
                 {
                     speedDrive(.075); 
@@ -380,27 +379,16 @@ public class AutoCode extends OpMode
                         default:
                             newDriveState(DriveState.END);
                     }
-                    
-                    /* if (propCenter) {
-                        newDriveState(DriveState.CENTER_PUSH_PROP);
-                    } else if (propLeft) {
-                        newDriveState(DriveState.LEFT_MOVE_BACK);
-                    } else if (propRight) {
-                        newDriveState(DriveState.RIGHT_MOVE_BACK);
-                    }
-                    else {
-                        newDriveState(DriveState.END);
-                    } */
                 } else if (gotDistance(45, true)){
                     newDriveState(DriveState.END);
                 }
                 else {        // Stick around
                     checkLowestDSensor();
                 }
-                break;
+                break; //}
                 
-            case CENTER_PUSH_PROP:
-                telemetry.addData("Drive state", "Center Push Prop");
+            case CENTER_PUSH_PROP: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -412,11 +400,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;    
+                break; //}
                 
-                
-            case CENTER_MOVE_BACK:
-                telemetry.addData("Drive state", "Center move back");
+            case CENTER_MOVE_BACK: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -429,10 +416,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;    
+                break; //}
                 
-            case  LEFT_MOVE_BACK:
-                telemetry.addData("Drive state", "Left move back");
+            case  LEFT_MOVE_BACK: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -445,9 +432,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;    
-            case LEFT_STRAFE_TO_LINE:
-                telemetry.addData("Drive state","Left Strafe to Line");
+                break; //}
+                
+            case LEFT_STRAFE_TO_LINE: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)  // Start Starting
                 {
                     robot.resetDriveEncoders();
@@ -462,10 +450,10 @@ public class AutoCode extends OpMode
                 }
                 else {        // Stick around
                 }
-                break;
+                break; //}
                 
-        case  LEFT_MOVE_BACK_AGAIN:
-                telemetry.addData("Drive state", "Left move back again");
+            case  LEFT_MOVE_BACK_AGAIN: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -478,10 +466,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;
+                break; //}
                 
-            case  RIGHT_MOVE_BACK:
-                telemetry.addData("Drive state", "Right move back");
+            case  RIGHT_MOVE_BACK: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -494,10 +482,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;    
+                break; //}
                 
-            case RIGHT_STRAFE_TO_LINE:
-                telemetry.addData("Drive state","Right Strafe to Line");
+            case RIGHT_STRAFE_TO_LINE: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)  // Start Starting
                 {   
                     robot.resetDriveEncoders();
@@ -512,10 +500,10 @@ public class AutoCode extends OpMode
                 }
                 else {        // Stick around
                 }
-                break;
+                break; //}
                 
-        case  RIGHT_MOVE_BACK_AGAIN:
-                telemetry.addData("Drive state", "right move back again");
+            case  RIGHT_MOVE_BACK_AGAIN: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
@@ -529,9 +517,10 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break;
-        case POSITION_PIXEL_60:
-                telemetry.addData("Drive state","Position Pixel_60");
+                break; //}
+                
+            case POSITION_PIXEL_60: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)  // Start Starting
                 {
                     robot.resetDriveEncoders();
@@ -548,10 +537,10 @@ public class AutoCode extends OpMode
                 }
                 else {        // Stick around
                 }
-                break;
+                break; //}
                 
-            case SLIGHT_DROP_70://{
-                telemetry.addData("Drive state", "Slight Drop_70");
+            case SLIGHT_DROP_70: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds() + 1000;
                     robot.lg_servo.setPosition(robot.LEFT_GRIP_SLIGHT_OPEN);
@@ -562,10 +551,10 @@ public class AutoCode extends OpMode
                 } else {
                     
                 }
-                break;//}    
+                break; //}    
             
-            case SLIGHT_RAISE_80:
-                telemetry.addData("Drive state", "Slight Raise_80");
+            case SLIGHT_RAISE_80: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
@@ -576,11 +565,11 @@ public class AutoCode extends OpMode
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_SLIGHT_RAISE, robot.WRIST_PICKUP, 0.04);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
-                break;//}
+                break; //}
             
                 
-            case DROP_STEP1://{
-                telemetry.addData("Arm state", "Drop step 1");
+            case DROP_STEP1: //{
+                telemetry.addData("Arm state", CurrentDriveState.name());
                 if (InitDriveState) {
                      waitTime = DriveStateTime.milliseconds()+ 1000;
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -592,10 +581,10 @@ public class AutoCode extends OpMode
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .02);
                 }
-                break;//}
+                break; //}
                 
-            case DROP_STEP0_PREPICKUP:
-                telemetry.addData("Arm state", "Drop Step 0; Prepickup");
+            case DROP_STEP0_PREPICKUP: //{
+                telemetry.addData("Arm state", CurrentDriveState.name());
                 if (InitDriveState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
@@ -606,10 +595,10 @@ public class AutoCode extends OpMode
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
                     //gripperControl(grip_wide_btn, grip_mid_btn);
                 }
-                break;//}
+                break; //}
         
-            case DROP_STEP2://{
-                telemetry.addData("Arm state", "Drop step 2");
+            case DROP_STEP2: //{
+                telemetry.addData("Arm state", CurrentDriveState.name());
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 1000;
                     // TOFIX robot.setGripperPosition(robot.LEFT_GRIP_OPEN, robot.RIGHT_GRIP_OPEN);
@@ -620,10 +609,10 @@ public class AutoCode extends OpMode
                 } else {
                     
                 }
-                break;//}
+                break; //}
                 
-             case DROP_STEP3://{
-                telemetry.addData("Arm state", "Drop step 3");
+             case DROP_STEP3: //{
+                telemetry.addData("Arm state", CurrentDriveState.name());
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 1000;
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -635,10 +624,10 @@ public class AutoCode extends OpMode
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PRETUCK, wristPlace, .02);
                 }
-                break;//}
+                break; //}
                 
-            case DROP_STEP4://{
-                telemetry.addData("Arm state", "Drop step 4");
+            case DROP_STEP4: //{
+                telemetry.addData("Arm state", CurrentDriveState.name());
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds()+ 1000;
                     // TOFIX robot.setGripperPosition(robot.LEFT_GRIP_CLOSED, robot.RIGHT_GRIP_CLOSED);
@@ -657,9 +646,10 @@ public class AutoCode extends OpMode
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK, robot.WRIST_TUCK, .02);
                 }
-                break;//}
-            case TURN_RIGHT:
-                telemetry.addData("Drive state", "Turn Right");
+                break; //}
+                
+            case TURN_RIGHT: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     turn(0.5, -0.5);
                     InitDriveState = false;
@@ -673,8 +663,10 @@ public class AutoCode extends OpMode
                         
                     }
                 }
-            case DRIVE_TO_BACKBOARD1:
-                telemetry.addData("Drive state", "Drive to Backboard 1");
+                break; //}
+                
+            case DRIVE_TO_BACKBOARD1: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     robot.gyroDrive(0.5, 90, .1);
                     InitDriveState = false;
@@ -690,9 +682,10 @@ public class AutoCode extends OpMode
                         
                     }
                 }
-                break;
-            case DRIVE_TO_BACKBOARD2:
-                telemetry.addData("Drive state", "Drive to Backboard 2");
+                break; //}
+                
+            case DRIVE_TO_BACKBOARD2: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     robot.gyroDrive(0.5, - 90, .1);
                     InitDriveState = false;
@@ -709,32 +702,40 @@ public class AutoCode extends OpMode
                 } else {
 
                 }
-            case BACKBOARD_MOVE_CENTER:
-                telemetry.addData("Drive state", "Backboard move center");
+                break; //}
+                
+            case BACKBOARD_MOVE_CENTER: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     InitDriveState = false;
                 }
                 if (true) {
                     newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
                 }
-            case BACKBOARD_MOVE_LEFT:
-                telemetry.addData("Drive state", "Backboard move left");
+                break; //}
+                
+            case BACKBOARD_MOVE_LEFT: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     InitDriveState = false;
                 }
                 if (true) {
                     newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
                 }
-            case BACKBOARD_MOVE_RIGHT:
-                telemetry.addData("Drive state", "Backboard move right");
+                break; //}
+                
+            case BACKBOARD_MOVE_RIGHT: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     InitDriveState = false;
                 }
                 if (true) {
                     newDriveState(DriveState.DROP_BACKBOARD_0_PREPICKUP);
                 }
-            case DROP_BACKBOARD_0_PREPICKUP:
-                telemetry.addData("Arm state", "Backboard Drop 0; Prepickup");
+                break; //}
+                
+            case DROP_BACKBOARD_0_PREPICKUP: //{
+                telemetry.addData("Arm state", CurrentDriveState.name());
                 if (InitDriveState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     InitDriveState = false;
@@ -744,9 +745,10 @@ public class AutoCode extends OpMode
                 } else {
                     armControl(robot.ELBOW_MAX_SPEED, robot.ELBOW_PREPICKUP, robot.WRIST_PICKUP, 0.04);
                 }
-                break;
-            case PARK_RIGHT:
-                telemetry.addData("Drive state","Park Right");
+                break; //}
+                
+            case PARK_RIGHT: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)  // Start Starting
                 {   
                     robot.resetDriveEncoders();
@@ -757,10 +759,10 @@ public class AutoCode extends OpMode
                 }
                 else {        // Stick around
                 }
-                break;
+                break; //}
                 
-            case PARK_LEFT:
-                telemetry.addData("Drive state","Park Left");
+            case PARK_LEFT: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)  // Start Starting
                 {   
                     robot.resetDriveEncoders();
@@ -771,17 +773,16 @@ public class AutoCode extends OpMode
                 }
                 else {        // Stick around
                 }
-                break;
+                break; //}
                 
-            case END:
-                telemetry.addData("Drive state","END");
+            case END: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
                 if (true)
                 {
                     stopDrive();
                 }
-                break;
+                break; //}
         }
-        
 
         // Show the elapsed game time and wheel power.
         robot.updatePersistentTelemetry();
@@ -807,7 +808,6 @@ public class AutoCode extends OpMode
         CurrentDriveState = newState;
         InitDriveState = true;
     }
-    
     
     //TODO move to robot hardare
     private void speedDrive (double speed){
@@ -902,7 +902,6 @@ public class AutoCode extends OpMode
         robot.setDrivePower(leftSpeed, rightSpeed, leftSpeed, rightSpeed);
     }
     
-    
     private boolean gotLine(){
         int blue = robot.clrl_sensor.blue();
         int red = robot.clrl_sensor.red();
@@ -915,7 +914,6 @@ public class AutoCode extends OpMode
             return false;
         }
     }
-    
     
     private void checkLowestDSensor() {
         double tempL = robot.leftd_sensor.getDistance(DistanceUnit.INCH);
@@ -933,12 +931,10 @@ public class AutoCode extends OpMode
         } else {
             propLocation = Prop.CENTER;
         }
-        
-        
     }
     
-     private void armControl (double power, int elbow, double wrist, double wristStep) {
-          robot.setElbowPower(power);
+    private void armControl (double power, int elbow, double wrist, double wristStep) {
+        robot.setElbowPower(power);
         robot.elbow_motor.setTargetPosition(elbow);
                     
         wristPlace=robot.wrist_servo.getPosition();

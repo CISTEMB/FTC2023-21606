@@ -121,19 +121,15 @@ public class RobotHardware
   public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
   public double RIGHT_GRIP_CLOSED = 0.5;  // right grip closes on high
-  // public double RIGHT_GRIP_DROP1 = 0.175;
   public double RIGHT_GRIP_OPEN = 0.2;
-  public double LEFT_GRIP_CLOSED = 0.38; //0.35 ;  // left grip closes on low
-  // public double LEFT_GRIP_DROP1 = 0.685;
-  public double LEFT_GRIP_OPEN = 0.65; //0.8;
+  public double LEFT_GRIP_CLOSED = 0.38; //left grip closes on low
+  public double LEFT_GRIP_OPEN = 0.65; 
   public double LEFT_GRIP_SLIGHT_OPEN = 0.52;
 
-  
   public double LEFT_HANG_SERVO_INIT = 0;
   public double RIGHT_HANG_SERVO_INIT = 1;
   public double LEFT_HANG_SERVO_RELEASE = 1;
   public double RIGHT_HANG_SERVO_RELEASE = 0;
-  
   
   public double CHECK_DELAY = 20;
   // }
@@ -222,6 +218,7 @@ public class RobotHardware
       elbow_motor.setTargetPosition(0);
       elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
       wrist_servo.setPosition(0);
+      
       // TOFIX setGripperPosition(LEFT_GRIP_CLOSED, RIGHT_GRIP_CLOSED);
       setLeftGripperPosition(LEFT_GRIP_CLOSED);
       setRightGripperPosition(RIGHT_GRIP_CLOSED);
@@ -236,8 +233,6 @@ public class RobotHardware
       
       left_hang_servo.setPosition(LEFT_HANG_SERVO_INIT);
       right_hang_servo.setPosition(RIGHT_HANG_SERVO_INIT);
-      
-      
 
       telemetry.addData("RobotHardware","Initialized successfully!");
       initialized = true;
@@ -283,7 +278,6 @@ public class RobotHardware
     lb_motor.setTargetPosition(countslb);
     rb_motor.setTargetPosition(countsrb);
   }
-
 
   /**
    * Set the power of the elbow motor
@@ -363,157 +357,97 @@ public class RobotHardware
     telemetry.addData("Gyro Heading", telHeading);
     telemetry.addData("Elbow Position", telElbowPos);
   }
-  /*
-  void composeIMUTelemetry() {
 
-        // At the beginning of each telemetry update, grab a bunch of data
-        // from the IMU that we will then display in separate lines.
-        telemetry.addAction(new Runnable() { @Override public void run()
-                {
-                // Acquiring the angles is relatively expensive; we don't want
-                // to do that in each of the three items that need that info, as that's
-                // three times the necessary expense.
-                angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-                gravity  = imu.getGravity();
-                }
-            });
-
-        telemetry.addLine()
-            .addData("status", new Func<String>() {
-                @Override public String value() {
-                    return imu.getSystemStatus().toShortString();
-                    }
-                })
-            .addData("calib", new Func<String>() {
-                @Override public String value() {
-                    return imu.getCalibrationStatus().toString();
-                    }
-                });
-
-        telemetry.addLine()
-            .addData("heading", new Func<String>() {
-                @Override public String value() {
-                    return formatAngle(angles.angleUnit, angles.firstAngle-IMUOffset);
-                    }
-                })
-            .addData("roll", new Func<String>() {
-                @Override public String value() {
-                    return formatAngle(angles.angleUnit, angles.secondAngle);
-                    }
-                })
-            .addData("pitch", new Func<String>() {
-                @Override public String value() {
-                    return formatAngle(angles.angleUnit, angles.thirdAngle);
-                    }
-                });
-
-        telemetry.addLine()
-            .addData("grvty", new Func<String>() {
-                @Override public String value() {
-                    return gravity.toString();
-                    }
-                })
-            .addData("mag", new Func<String>() {
-                @Override public String value() {
-                    return String.format(Locale.getDefault(), "%.3f",
-                            Math.sqrt(gravity.xAccel*gravity.xAccel
-                                    + gravity.yAccel*gravity.yAccel
-                                    + gravity.zAccel*gravity.zAccel));
-                    }
-                });
-    }
-    */
+  public void resetIMU() {
+    imu.resetYaw();
+  }
     
-    public void resetIMU() {
-      imu.resetYaw();
-    }
-    
-    public double getAngle() {
-      orientation = imu.getRobotYawPitchRollAngles();
-      double currAngle = orientation.getYaw(AngleUnit.DEGREES);
+  public double getAngle() {
+    orientation = imu.getRobotYawPitchRollAngles();
+    double currAngle = orientation.getYaw(AngleUnit.DEGREES);
       
-      double deltaAngle = currAngle - lastAngle;
+    double deltaAngle = currAngle - lastAngle;
       
-      if (deltaAngle < -180)
-        deltaAngle += 360;
-      else if (deltaAngle > 180)
-        deltaAngle -= 360;
+    if (deltaAngle < -180)
+      deltaAngle += 360;
+    else if (deltaAngle > 180)
+      deltaAngle -= 360;
+    
+    angle += deltaAngle;
       
-      angle += deltaAngle;
+    lastAngle = currAngle;
       
-      lastAngle = currAngle;
-      
-      telHeading = angle;
-      return angle;
-    }
+    telHeading = angle;
+    return angle;
+  }
     
     
-    public void gyroDrive(double speed, double targetAngle, double gain ) {     
-      setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
+  public void gyroDrive(double speed, double targetAngle, double gain ) {     
+    setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-      // Update gyro readings only if enough time has passed
-      if (System.currentTimeMillis() - gyroDriveLastUpdateTime > CHECK_DELAY) {
-          angle = getAngle();
-          double error = targetAngle - angle;
+    // Update gyro readings only if enough time has passed
+    if (System.currentTimeMillis() - gyroDriveLastUpdateTime > CHECK_DELAY) {
+      angle = getAngle();
+      double error = targetAngle - angle;
           
-          double leftFrontPower = speed - (gain * error);
-          double rightFrontPower = speed + (gain * error);
-          double leftBackPower = speed - (gain * error);
-          double rightBackPower = speed + (gain * error);
+      double leftFrontPower = speed - (gain * error);
+      double rightFrontPower = speed + (gain * error);
+      double leftBackPower = speed - (gain * error);
+      double rightBackPower = speed + (gain * error);
           
-          // Limit motor powers to the valid range (-1 to 1)
-          leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
-          rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
-          leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
-          rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
+      // Limit motor powers to the valid range (-1 to 1)
+      leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
+      rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
+      leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
+      rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
           
-          // Apply motor powers to the motors
-          setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+      // Apply motor powers to the motors
+      setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
           
-          // Update the last update time
-          gyroDriveLastUpdateTime = System.currentTimeMillis();
-      }
+      // Update the last update time
+      gyroDriveLastUpdateTime = System.currentTimeMillis();
     }
+  }
     
-    
-    public void gyroStrafe(double speed, double targetAngle, double gain ) {
-      setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
+  public void gyroStrafe(double speed, double targetAngle, double gain ) {
+    setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-      // Update gyro readings only if enough time has passed
-      if (System.currentTimeMillis() - gyroStrafeLastUpdateTime > CHECK_DELAY) {
-          angle = getAngle();
-          double error = targetAngle - angle;
+    // Update gyro readings only if enough time has passed
+    if (System.currentTimeMillis() - gyroStrafeLastUpdateTime > CHECK_DELAY) {
+      angle = getAngle();
+      double error = targetAngle - angle;
+        
+      double leftFrontPower = speed - (gain * error);
+      double rightFrontPower = -speed + (gain * error);
+      double leftBackPower = -speed - (gain * error);
+      double rightBackPower = speed + (gain * error);
           
-          double leftFrontPower = speed - (gain * error);
-          double rightFrontPower = -speed + (gain * error);
-          double leftBackPower = -speed - (gain * error);
-          double rightBackPower = speed + (gain * error);
+      // Limit motor powers to the valid range (-1 to 1)
+      leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
+      rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
+      leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
+      rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
           
-          // Limit motor powers to the valid range (-1 to 1)
-          leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
-          rightFrontPower = Range.clip(rightFrontPower, -1.0, 1.0);
-          leftBackPower = Range.clip(leftBackPower, -1.0, 1.0);
-          rightBackPower = Range.clip(rightBackPower, -1.0, 1.0);
+      // Apply motor powers to the motors
+      setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
           
-          // Apply motor powers to the motors
-          setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
-          
-          // Update the last update time
-          gyroStrafeLastUpdateTime = System.currentTimeMillis();
-      }
+      // Update the last update time
+      gyroStrafeLastUpdateTime = System.currentTimeMillis();
     }
+  }
     
-    public void releaseHangServos() {
-      left_hang_servo.setPosition(LEFT_HANG_SERVO_RELEASE);
-      right_hang_servo.setPosition(RIGHT_HANG_SERVO_RELEASE);
-      telemetry.addData("RobotHardware","Hang servos released!");
-    }
+  public void releaseHangServos() {
+    left_hang_servo.setPosition(LEFT_HANG_SERVO_RELEASE);
+    right_hang_servo.setPosition(RIGHT_HANG_SERVO_RELEASE);
+    telemetry.addData("RobotHardware","Hang servos released!");
+  }
     
-    public void setHangPower(double power) {
-      left_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-      right_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-      left_hang_motor.setPower(power);
-      right_hang_motor.setPower(power);
-      telemetry.addData("RobotHardware","Hang motor power: (%.2f)",power);
-    }
+  public void setHangPower(double power) {
+    left_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    right_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    left_hang_motor.setPower(power);
+    right_hang_motor.setPower(power);
+    telemetry.addData("RobotHardware","Hang motor power: (%.2f)",power);
+  }
+
 }
