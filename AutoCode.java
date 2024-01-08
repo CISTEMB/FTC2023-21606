@@ -98,6 +98,9 @@ public class AutoCode extends OpMode
     // Declare drive state machine enums and variables {
     private enum DriveState {
         INIT,
+        TEST_GYRO_DRIVE,
+        TEST_GYRO_STRAFE,
+        TEST_GYRO_TURN,
         WRIST_DOWN_5,
         CLEAR_TRUSS_10,
         FIND_LINE_20,
@@ -276,8 +279,55 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } 
                 if (true) { // Because we not want to immedatly start
-                    // newDriveState(DriveState.TEST_TURN);
-                    newDriveState(DriveState.WRIST_DOWN_5);
+                    newDriveState(DriveState.TEST_GYRO_DRIVE);
+                    //newDriveState(DriveState.WRIST_DOWN_5);
+                }
+                break;
+            
+            case TEST_GYRO_DRIVE:
+                telemetry.addData("Drive state", "Clearing Truss_10");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    robot.gyroDrive(.2, 0.0, 0.03);
+                    InitDriveState = false;
+                } 
+                if (gotDistance (30, true)) {  // Time to leave
+                    newDriveState(DriveState.TEST_GYRO_STRAFE);
+                    stopDrive();
+                } else {  // Stick around
+                   robot.gyroDrive(.5, 0.0, 0.03); 
+                }
+                break;
+                
+            case TEST_GYRO_STRAFE:   
+                telemetry.addData("Drive state", "Clearing Truss_10");
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    robot.gyroStrafe(.1, 0, 0.03);
+                    InitDriveState = false;
+                } 
+                if (gotStrafeDistance(10, true)) {  // Time to leave
+                    newDriveState(DriveState.TEST_GYRO_TURN);
+                    stopDrive();
+                } else {  // Stick around
+                   robot.gyroStrafe(.1, 0, 0.03); 
+                }
+                break;
+                
+            case TEST_GYRO_TURN:    
+                telemetry.addData("Drive state", "Turn Right");
+                if (InitDriveState) {
+                    turn(0.5, -0.5);
+                    InitDriveState = false;
+                }
+                if (gotAngle(-90,true)) {
+                        stopDrive();
+                        //robot.setDrivePower(0, 0, 0, 0);
+                        newDriveState(DriveState.END);
+                } else {
+                        
                 }
                 break;
             
@@ -626,11 +676,11 @@ public class AutoCode extends OpMode
             case DRIVE_TO_BACKBOARD1:
                 telemetry.addData("Drive state", "Drive to Backboard 1");
                 if (InitDriveState) {
-                    robot.gyroDrive(90, 0.5);
+                    robot.gyroDrive(0.5, 90, .1);
                     InitDriveState = false;
                 }
                 if (true) {
-                    robot.gyroDrive(90, 0.5);
+                    robot.gyroDrive(0.5, 90, .1);
                     int blue = robot.clrl_sensor.blue();
                     int red = robot.clrl_sensor.red();
                     telemetry.addData("color", "red: " + red + " blue: " + blue);
@@ -644,7 +694,7 @@ public class AutoCode extends OpMode
             case DRIVE_TO_BACKBOARD2:
                 telemetry.addData("Drive state", "Drive to Backboard 2");
                 if (InitDriveState) {
-                    robot.gyroDrive(-90, 0.5);
+                    robot.gyroDrive(0.5, - 90, .1);
                     InitDriveState = false;
                 }
                 if (gotDistance(5, true)) {
@@ -758,6 +808,8 @@ public class AutoCode extends OpMode
         InitDriveState = true;
     }
     
+    
+    //TODO move to robot hardare
     private void speedDrive (double speed){
         robot.lf_motor.setPower(speed);
         robot.rf_motor.setPower(speed);

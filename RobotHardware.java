@@ -81,6 +81,10 @@ public class RobotHardware
   public YawPitchRollAngles orientation;
   public double lastAngle;
   public double angle;
+  long gyroStrafeLastUpdateTime = System.currentTimeMillis();
+  long gyroDriveLastUpdateTime = System.currentTimeMillis();
+  //double currentAngle = getAngle();
+    
   // }
 
   // Declare internal variables(initialization status, errors, etc.) {
@@ -123,13 +127,15 @@ public class RobotHardware
   // public double LEFT_GRIP_DROP1 = 0.685;
   public double LEFT_GRIP_OPEN = 0.65; //0.8;
   public double LEFT_GRIP_SLIGHT_OPEN = 0.52;
-  public double PROPORTIONAL_GAIN = 0.03;
-  public double CHECK_DELAY = 20;
+
   
   public double LEFT_HANG_SERVO_INIT = 0;
   public double RIGHT_HANG_SERVO_INIT = 1;
   public double LEFT_HANG_SERVO_RELEASE = 1;
   public double RIGHT_HANG_SERVO_RELEASE = 0;
+  
+  
+  public double CHECK_DELAY = 20;
   // }
   
   // declare constants for autonomous {
@@ -230,6 +236,8 @@ public class RobotHardware
       
       left_hang_servo.setPosition(LEFT_HANG_SERVO_INIT);
       right_hang_servo.setPosition(RIGHT_HANG_SERVO_INIT);
+      
+      
 
       telemetry.addData("RobotHardware","Initialized successfully!");
       initialized = true;
@@ -439,20 +447,19 @@ public class RobotHardware
       return angle;
     }
     
-    public void gyroDrive(double angle, double speed) {     
-      long lastUpdateTime = System.currentTimeMillis();
-      double currentAngle = getAngle();
+    
+    public void gyroDrive(double speed, double targetAngle, double gain ) {     
       setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
       // Update gyro readings only if enough time has passed
-      if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
-          currentAngle = getAngle();
-          double error = angle - currentAngle;
+      if (System.currentTimeMillis() - gyroDriveLastUpdateTime > CHECK_DELAY) {
+          angle = getAngle();
+          double error = targetAngle - angle;
           
-          double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
-          double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
-          double leftBackPower = speed - PROPORTIONAL_GAIN * error;
-          double rightBackPower = speed + PROPORTIONAL_GAIN * error;
+          double leftFrontPower = speed - (gain * error);
+          double rightFrontPower = speed + (gain * error);
+          double leftBackPower = speed - (gain * error);
+          double rightBackPower = speed + (gain * error);
           
           // Limit motor powers to the valid range (-1 to 1)
           leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
@@ -464,27 +471,23 @@ public class RobotHardware
           setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
           
           // Update the last update time
-          lastUpdateTime = System.currentTimeMillis();
+          gyroDriveLastUpdateTime = System.currentTimeMillis();
       }
-      if (Math.abs(angle - currentAngle) > 1.0) {
-        return true;
-      }
-      return false;
     }
-    public void gyroStrafe(double angle, double speed) {
-      long lastUpdateTime = System.currentTimeMillis();
-      double currentAngle = getAngle();
+    
+    
+    public void gyroStrafe(double speed, double targetAngle, double gain ) {
       setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
       // Update gyro readings only if enough time has passed
-      if (System.currentTimeMillis() - lastUpdateTime > CHECK_DELAY) {
-          currentAngle = getAngle();
-          double error = angle - currentAngle;
+      if (System.currentTimeMillis() - gyroStrafeLastUpdateTime > CHECK_DELAY) {
+          angle = getAngle();
+          double error = targetAngle - angle;
           
-          double leftFrontPower = speed - PROPORTIONAL_GAIN * error;
-          double rightFrontPower = speed + PROPORTIONAL_GAIN * error;
-          double leftBackPower = -(speed - PROPORTIONAL_GAIN * error);
-          double rightBackPower = -(speed + PROPORTIONAL_GAIN * error);
+          double leftFrontPower = speed - (gain * error);
+          double rightFrontPower = -speed + (gain * error);
+          double leftBackPower = -speed - (gain * error);
+          double rightBackPower = speed + (gain * error);
           
           // Limit motor powers to the valid range (-1 to 1)
           leftFrontPower = Range.clip(leftFrontPower, -1.0, 1.0);
@@ -496,18 +499,16 @@ public class RobotHardware
           setDrivePower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
           
           // Update the last update time
-          lastUpdateTime = System.currentTimeMillis();
+          gyroStrafeLastUpdateTime = System.currentTimeMillis();
       }
-      if (Math.abs(angle - currentAngle) > 1.0) {
-        return true;
-      }
-      return false;
     }
+    
     public void releaseHangServos() {
       left_hang_servo.setPosition(LEFT_HANG_SERVO_RELEASE);
       right_hang_servo.setPosition(RIGHT_HANG_SERVO_RELEASE);
       telemetry.addData("RobotHardware","Hang servos released!");
     }
+    
     public void setHangPower(double power) {
       left_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       right_hang_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
