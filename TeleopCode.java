@@ -64,9 +64,13 @@ public class TeleopCode extends OpMode
     private boolean tuck_pos_btn;
     private boolean tuck_pos_btn_old = false;
     private boolean tuck_pos_btn_press = false;
+    private boolean front_drop_pos_btn;
+    private boolean front_drop_pos_btn_old = false;
+    private boolean front_drop_pos_btn_press = false;
     private boolean reset_btn;
     private boolean reset_btn_old = false;
     private boolean reset_btn_press = false;
+
     
     private boolean right_grip_btn;
     private boolean left_grip_btn;
@@ -102,6 +106,7 @@ public class TeleopCode extends OpMode
         ARM_STATE_PREPICKUP,
         ARM_STATE_TUCK,
         ARM_STATE_ELBOW_HOLD,
+        ARM_STATE_FRONT_DROP,
         ARM_STATE_END, // Might not need, there for structure's sake
     };
     
@@ -211,6 +216,13 @@ public class TeleopCode extends OpMode
             pickup_pos_btn_press = false;
         }
         pickup_pos_btn_old = pickup_pos_btn;
+        front_drop_pos_btn = gamepad2.a;
+        if (!front_drop_pos_btn_old && front_drop_pos_btn) {
+            front_drop_pos_btn_press = true;
+        } else {
+            front_drop_pos_btn_press = false;
+        }
+        front_drop_pos_btn_old = front_drop_pos_btn;
         reset_btn = gamepad2.left_bumper;
         if (!reset_btn_old && reset_btn) {
             reset_btn_press = true;
@@ -293,6 +305,8 @@ public class TeleopCode extends OpMode
                 } else if (-0.01<elbow_joy && elbow_joy<0.01){
                     elbowHold = robot.elbow_motor.getCurrentPosition();
                     newArmState(ArmState.ARM_STATE_ELBOW_HOLD);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 }/* else if (reset_btn_press) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     InitArmState = true; // Probably bad practice, but oh well
@@ -321,6 +335,8 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PREPICKUP);
                 } else if(tuck_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PRETUCK);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 } else {
                     robot.elbow_motor.setTargetPosition(elbowHold);
                     wristPlace -= wrist_joy * robot.WRIST_SENSITIVITY;
@@ -345,6 +361,8 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PREPICKUP);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 } else if (robot.elbowWithinRange(robot.ELBOW_PRETUCK)){
                     newArmState(ArmState.ARM_STATE_TUCK);
                 } else {
@@ -365,6 +383,8 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else if(tuck_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PRETUCK);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 } else if (robot.elbowWithinRange(robot.ELBOW_PREPICKUP)){
                     newArmState(ArmState.ARM_STATE_PICKUP);
                 } else {
@@ -383,6 +403,8 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 }  else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PREPICKUP);
                 }
@@ -404,6 +426,8 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PREPICKUP);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_BACK, robot.WRIST_BACK, .004);
                     gripperControl(right_grip_btn, left_grip_btn);
@@ -422,8 +446,27 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_PICKUP, robot.WRIST_PICKUP, .1);
+                    gripperControl(right_grip_btn, left_grip_btn);
+                }
+                break;//}
+            case ARM_STATE_FRONT_DROP://{
+                telemetry.addData("Arm state", "Front Drop");
+                if (InitArmState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                }
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } else if(tuck_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_PRETUCK);
+                } else if(back_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else {
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP, robot.WRIST_FRONT_DROP, .1);
                     gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}

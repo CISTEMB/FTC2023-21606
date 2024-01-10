@@ -117,6 +117,8 @@ public class RobotHardware
   public double WRIST_PICKUP = 1;
   public int ELBOW_PICKUP = 0;
   public int ELBOW_SLIGHT_RAISE = 20;
+  public int ELBOW_FRONT_DROP = 97;
+  public double WRIST_FRONT_DROP = 0.887657;
   public double ELBOW_MAX_SPEED = .75;
   public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
