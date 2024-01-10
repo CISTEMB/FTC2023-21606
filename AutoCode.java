@@ -102,25 +102,29 @@ public class AutoCode extends OpMode
         TEST_GYRO_DRIVE,
         TEST_GYRO_STRAFE,
         TEST_GYRO_TURN,
-        WRIST_DOWN_5,
-        CLEAR_TRUSS_10,
-        FIND_LINE_20,
-        CENTER_PUSH_PROP, //nn
+        WRIST_DOWN_10,
+        CLEAR_TRUSS_20,
+        FIND_LINE_30,
+        MOVE_BACK_40,
+        STRAFE_TO_LINE_50,
+        /* CENTER_PUSH_PROP, //nn
         CENTER_MOVE_BACK, //30
         LEFT_MOVE_BACK, //40
         LEFT_STRAFE_TO_LINE, //50
         LEFT_MOVE_BACK_AGAIN, //nn
         RIGHT_MOVE_BACK,  //common
         RIGHT_STRAFE_TO_LINE, //common
-        RIGHT_MOVE_BACK_AGAIN, //nn
+        RIGHT_MOVE_BACK_AGAIN, //nn */
         POSITION_PIXEL_60,
         SLIGHT_DROP_70,
         SLIGHT_RAISE_80,
-        DROP_STEP0_PREPICKUP,
+        BACKUP_TO_CLEAR_PIXEL_90,
+        STRAFE_OUT_FROM_UNDER_TRUSS_100,
+        /* DROP_STEP0_PREPICKUP,
         DROP_STEP1,
         DROP_STEP2,
         DROP_STEP3,
-        DROP_STEP4,
+        DROP_STEP4, */ 
         TURN_RIGHT,
         DRIVE_TO_BACKBOARD1,
         DRIVE_TO_BACKBOARD2,
@@ -278,8 +282,8 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 } 
                 if (true) { // Because we not want to immedatly start
-                    newDriveState(DriveState.TEST_GYRO_DRIVE);
-                    //newDriveState(DriveState.WRIST_DOWN_5);
+                    // newDriveState(DriveState.TEST_GYRO_DRIVE);
+                    newDriveState(DriveState.WRIST_DOWN_10);
                 }
                 break; //}
             
@@ -330,7 +334,7 @@ public class AutoCode extends OpMode
                 }
                 break; //}
             
-            case WRIST_DOWN_5: //{
+            case WRIST_DOWN_10: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
                     waitTime = DriveStateTime.milliseconds() + 2000;
@@ -338,56 +342,45 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 }
                 if (DriveStateTime.milliseconds() > waitTime) {
-                    newDriveState(DriveState.CLEAR_TRUSS_10);
+                    newDriveState(DriveState.CLEAR_TRUSS_20);
                 } else {
                     
                 }
                 break; //}
             
-            case CLEAR_TRUSS_10: //{
+            case CLEAR_TRUSS_20: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
-                    speedDrive(.5);
+                    robot.gyroDrive(.5, 0, 0.03);
                     InitDriveState = false;
                 } 
                 if (gotDistance (28, true)) {  // Time to leave
-                    newDriveState(DriveState.FIND_LINE_20);
+                    newDriveState(DriveState.FIND_LINE_30);
                 } else {  // Stick around
-                    
+                    robot.gyroDrive(.5, 0, 0.03);
                 }
                 break; //}
                 
-            case FIND_LINE_20: //{
+            case FIND_LINE_30: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)  // Start Starting
                 {
-                    speedDrive(.075); 
+                    robot.gyroDrive(.075, 0, 0.03); 
                     InitDriveState = false;
                 } else if (gotLine()) {  // Time to leave
-                    switch (propLocation) {
-                        case CENTER:
-                            newDriveState(DriveState.CENTER_PUSH_PROP);
-                            break;
-                        case LEFT:
-                            newDriveState(DriveState.LEFT_MOVE_BACK);
-                            break;
-                        case RIGHT:
-                            newDriveState(DriveState.RIGHT_MOVE_BACK);
-                            break;
-                        default:
-                            newDriveState(DriveState.END);
-                    }
+                    newDriveState(DriveState.MOVE_BACK_40);
                 } else if (gotDistance(45, true)){
                     newDriveState(DriveState.END);
                 }
                 else {        // Stick around
+                    robot.gyroDrive(.075, 0, 0.03); 
                     checkLowestDSensor();
                 }
                 break; //}
                 
-            case CENTER_PUSH_PROP: //{
+            /* case CENTER_PUSH_PROP: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
@@ -400,9 +393,29 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
+                break; //} */
+            
+            case MOVE_BACK_40: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                if (InitDriveState) // Start starting
+                {
+                    robot.resetDriveEncoders();
+                    robot.gyroDrive(-.1, 0.0, 0.03);
+                    InitDriveState = false;
+                }
+                if (((propLocation == Prop.LEFT) && (gotDistance(-7, false))) ||
+                    ((propLocation == Prop.RIGHT) && (gotDistance(-7, false)))) { // Time to leave
+                    stopDrive();
+                    newDriveState(DriveState.STRAFE_TO_LINE_50);
+                } else if ((propLocation == Prop.CENTER) && (gotDistance(-3, false))) { // Time to leave
+                    stopDrive();
+                    newDriveState(DriveState.SLIGHT_DROP_70);
+                } else { // Stick around
+                    robot.gyroDrive(-.1, 0.0, 0.03);
+                }
                 break; //}
-                
-            case CENTER_MOVE_BACK: //{
+            
+            /* case CENTER_MOVE_BACK: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
@@ -432,7 +445,7 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
-                break; //}
+                break; //} 
                 
             case LEFT_STRAFE_TO_LINE: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
@@ -517,6 +530,33 @@ public class AutoCode extends OpMode
                 } else {  // Stick around
                     
                 }
+                break; //} */
+
+            case STRAFE_TO_LINE_50: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                if (InitDriveState) // Start starting
+                {
+                    robot.resetDriveEncoders();
+                    if (propLocation == Prop.LEFT) {
+                        robot.gyroStrafe(-.2, 0.0, 0.03);
+                    } else {
+                        robot.gyroStrafe(.2, 0.0, 0.03);
+                    }
+                    InitDriveState = false;
+                }
+                if (gotLine()) {  // Time to leave
+                    stopDrive();
+                    newDriveState(DriveState.POSITION_PIXEL_60);
+                } else if (gotStrafeDistance(10, true)){ 
+                    newDriveState(DriveState.END);
+                }
+                else {        // Stick around
+                    if (propLocation == Prop.LEFT) {
+                        robot.gyroStrafe(-.2, 0.0, 0.03);
+                    } else {
+                        robot.gyroStrafe(.2, 0.0, 0.03);
+                    }
+                }
                 break; //}
                 
             case POSITION_PIXEL_60: //{
@@ -524,18 +564,14 @@ public class AutoCode extends OpMode
                 if (InitDriveState)  // Start Starting
                 {
                     robot.resetDriveEncoders();
-                    if(propLocation == Prop.RIGHT) {
-                        speedStrafe(.20);
-                    } else {
-                        speedStrafe(-.20);
-                    }
+                    robot.gyroStrafe(.2, 0.0, 0.03);
                     InitDriveState = false;
-                } else if (((propLocation == Prop.RIGHT) && (gotStrafeDistance(1.5,true))) ||
-                           ((propLocation == Prop.LEFT) && (gotStrafeDistance(-1.5,false)))) {
-                    speedDrive(0);           
+                } else if (gotStrafeDistance(1.5,true)) {
+                    stopDrive();           
                     newDriveState(DriveState.SLIGHT_DROP_70);
                 }
-                else {        // Stick around
+                else { // Stick around
+                    robot.gyroStrafe(.2, 0.0, 0.03);
                 }
                 break; //}
                 
@@ -560,15 +596,58 @@ public class AutoCode extends OpMode
                     InitDriveState = false;
                 }
                 if (robot.elbowWithinRange(robot.ELBOW_SLIGHT_RAISE)){
-                    newDriveState(DriveState.END);
+                    newDriveState(DriveState.BACKUP_TO_CLEAR_PIXEL_90);
                 } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_SLIGHT_RAISE, robot.WRIST_PICKUP, 0.04);
-                    //gripperControl(grip_wide_btn, grip_mid_btn);
+                    armControl(robot.ELBOW_MAX_SPEED, robot.ELBOW_SLIGHT_RAISE, robot.WRIST_PICKUP, 0.04);
                 }
                 break; //}
-            
                 
-            case DROP_STEP1: //{
+            case BACKUP_TO_CLEAR_PIXEL_90: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                if (InitDriveState) { // Start starting
+                    robot.resetDriveEncoders();
+                    robot.gyroDrive(-.1, 0.0, 0.03);
+                    InitDriveState = false;
+                }
+                if (gotDistance(-2, false)) { // Time to leave
+                    stopDrive();
+                    if ((colorSetting == Color.RED && sideSetting == Side.BACKDROP && propLocation == Prop.LEFT) ||
+                        (colorSetting == Color.RED && sideSetting == Side.AIRSTRIP && propLocation == Prop.RIGHT) ||
+                        (colorSetting == Color.BLUE && sideSetting == Side.BACKDROP && propLocation == Prop.RIGHT) ||
+                        (colorSetting == Color.BLUE && sideSetting == Side.AIRSTRIP && propLocation == Prop.LEFT)) {
+                        newDriveState(DriveState.STRAFE_OUT_FROM_UNDER_TRUSS_100);
+                    } else {
+                        newDriveState(DriveState.END);
+                    }
+                } else { // Stick around
+                    robot.gyroDrive(-.1, 0.0, 0.03);
+                }
+                break; //}
+                
+            case STRAFE_OUT_FROM_UNDER_TRUSS_100: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                if (InitDriveState) { // Start starting
+                    robot.resetDriveEncoders();
+                    robot.gyroStrafe(.1, 0.0, 0.03);
+                    InitDriveState = false;
+                }
+                if (gotStrafeDistance(6, true)) {
+                    stopDrive();
+                    newDriveState(DriveState.END);
+                } else {
+                    robot.gyroStrafe(.1, 0.0, 0.03);
+                }
+                break; //}
+                
+            /* case TUCK_ARM_110: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                if (InitDriveState) { // Start starting
+                    robot.setElbowPosition(robot.ELBOW_TUCK);
+                    
+                }
+                break; //} */
+            
+            /*case DROP_STEP1: //{
                 telemetry.addData("Arm state", CurrentDriveState.name());
                 if (InitDriveState) {
                      waitTime = DriveStateTime.milliseconds()+ 1000;
@@ -773,7 +852,7 @@ public class AutoCode extends OpMode
                 }
                 else {        // Stick around
                 }
-                break; //}
+                break; //}*/
                 
             case END: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
