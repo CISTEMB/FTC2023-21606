@@ -48,6 +48,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
@@ -450,6 +451,28 @@ public class RobotHardware
     left_hang_motor.setPower(power);
     right_hang_motor.setPower(power);
     telemetry.addData("RobotHardware","Hang motor power: (%.2f)",power);
+  }
+
+  public void gotSideDistance(double distance, boolean rightSide, boolean movingToward) {
+    double sideDistance = -1;
+    if (rightSide) { //Right side
+      sideDistance = rightd_sensor.getDistance(DistanceUnit.INCH);
+    } else { //Left side
+      sideDistance = leftd_sensor.getDistance(DistanceUnit.INCH);
+    }
+    if (movingToward) { //Moving toward the object
+      if (sideDistance <= distance) {
+        return true;
+      } else {
+        return false;
+      }
+    } else { //Moving away from the object
+      if (sideDistance >= distance) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   }
 
 }
