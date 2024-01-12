@@ -49,9 +49,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@Autonomous(name="Auto Code", group="Practice", preselectTeleOp="Teleop Code")
+@Disabled
+@Autonomous(name="Test Gyro", group="Practice", preselectTeleOp="Teleop Code")
 
-public class AutoCode extends OpMode
+public class TestGyro extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
@@ -99,24 +100,9 @@ public class AutoCode extends OpMode
     // Declare drive state machine enums and variables {
     private enum DriveState {
         INIT,
-        WRIST_DOWN_10,
-        CLEAR_TRUSS_20,
-        FIND_LINE_30,
-        MOVE_BACK_40,
-        STRAFE_TO_LINE_50,
-        POSITION_PIXEL_60,
-        SLIGHT_DROP_70,
-        SLIGHT_RAISE_80,
-        BACKUP_TO_CLEAR_PIXEL_90,
-        STRAFE_OUT_FROM_UNDER_TRUSS_RIGHT_100,
-        STRAFE_OUT_FROM_UNDER_TRUSS_LEFT_105,
-        TUCK_ARM_110,
-        TURN_TO_FACE_BACKDROP_120,
-        DRIVE_TO_BACKBOARD_LINE_130,
-        POSITION_ARM_FOR_BACKBOARD_140,
-        STRAFE_TO_SIDE_OF_FIELD_200,
-        DRIVE_INTO_CORNER_210,
-
+        TEST_GYRO_DRIVE,
+        TEST_GYRO_STRAFE,
+        TEST_GYRO_TURN,
         END,
         // TEST_TURN,
     };
@@ -266,345 +252,54 @@ public class AutoCode extends OpMode
                 } 
                 if (true) { // Because we not want to immedatly start
                     // newDriveState(DriveState.TEST_GYRO_DRIVE);
-                    newDriveState(DriveState.WRIST_DOWN_10);
-                }
-                break; //}            
-            
-            case WRIST_DOWN_10: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState) {
-                    waitTime = DriveStateTime.milliseconds() + 2000;
-                    robot.wrist_servo.setPosition(robot.WRIST_PICKUP);
-                    InitDriveState = false;
-                }
-                if (DriveStateTime.milliseconds() > waitTime) {
-                    newDriveState(DriveState.CLEAR_TRUSS_20);
-                } else {
-                    
+                    newDriveState(DriveState.TEST_GYRO_DRIVE);
                 }
                 break; //}
             
-            case CLEAR_TRUSS_20: //{
+            case TEST_GYRO_DRIVE: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
-                    robot.gyroDrive(.5, 0, 0.03);
+                    robot.gyroDrive(.2, 0.0, 0.03);
                     InitDriveState = false;
                 } 
-                if (gotDistance (28, true)) {  // Time to leave
-                    newDriveState(DriveState.FIND_LINE_30);
+                if (gotDistance (30, true)) {  // Time to leave
+                    newDriveState(DriveState.TEST_GYRO_STRAFE);
+                    stopDrive();
                 } else {  // Stick around
-                    robot.gyroDrive(.5, 0, 0.03);
+                   robot.gyroDrive(.5, 0.0, 0.03); 
                 }
                 break; //}
                 
-            case FIND_LINE_30: //{
+            case TEST_GYRO_STRAFE: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState)  // Start Starting
-                {
-                    robot.gyroDrive(.075, 0, 0.03); 
-                    InitDriveState = false;
-                } else if (gotLine()) {  // Time to leave
-                    newDriveState(DriveState.MOVE_BACK_40);
-                } else if (gotDistance(45, true)){
-                    newDriveState(DriveState.END);
-                }
-                else {        // Stick around
-                    robot.gyroDrive(.075, 0, 0.03); 
-                    checkLowestDSensor();
-                }
-                break; //}
-                          
-            case MOVE_BACK_40: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState) // Start starting
+                if (InitDriveState)
                 {
                     robot.resetDriveEncoders();
-                    robot.gyroDrive(-.1, 0.0, 0.03);
+                    robot.gyroStrafe(.1, 0, 0.03);
                     InitDriveState = false;
-                }
-                if (((propLocation == Prop.LEFT) && (gotDistance(-7, false))) ||
-                    ((propLocation == Prop.RIGHT) && (gotDistance(-7, false)))) { // Time to leave
+                } 
+                if (gotStrafeDistance(10, true)) {  // Time to leave
+                    newDriveState(DriveState.TEST_GYRO_TURN);
                     stopDrive();
-                    newDriveState(DriveState.STRAFE_TO_LINE_50);
-                } else if ((propLocation == Prop.CENTER) && (gotDistance(-3, false))) { // Time to leave
-                    stopDrive();
-                    newDriveState(DriveState.SLIGHT_DROP_70);
-                } else { // Stick around
-                    robot.gyroDrive(-.1, 0.0, 0.03);
-                }
-                break; //}
-            
-            case STRAFE_TO_LINE_50: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState) // Start starting
-                {
-                    robot.resetDriveEncoders();
-                    if (propLocation == Prop.LEFT) {
-                        robot.gyroStrafe(-.2, 0.0, 0.03);
-                    } else {
-                        robot.gyroStrafe(.2, 0.0, 0.03);
-                    }
-                    InitDriveState = false;
-                }
-                if (gotLine()) {  // Time to leave
-                    stopDrive();
-                    newDriveState(DriveState.POSITION_PIXEL_60);
-                } else if (gotStrafeDistance(10, true)){ 
-                    newDriveState(DriveState.END);
-                }
-                else {        // Stick around
-                    if (propLocation == Prop.LEFT) {
-                        robot.gyroStrafe(-.2, 0.0, 0.03);
-                    } else {
-                        robot.gyroStrafe(.2, 0.0, 0.03);
-                    }
+                } else {  // Stick around
+                   robot.gyroStrafe(.1, 0, 0.03); 
                 }
                 break; //}
                 
-            case POSITION_PIXEL_60: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState)  // Start Starting
-                {
-                    robot.resetDriveEncoders();
-                    robot.gyroStrafe(.2, 0.0, 0.03);
-                    InitDriveState = false;
-                } else if (gotStrafeDistance(1.5,true)) {
-                    stopDrive();           
-                    newDriveState(DriveState.SLIGHT_DROP_70);
-                }
-                else { // Stick around
-                    robot.gyroStrafe(.2, 0.0, 0.03);
-                }
-                break; //}
-                
-            case SLIGHT_DROP_70: //{
+            case TEST_GYRO_TURN: //{
                 telemetry.addData("Drive state", CurrentDriveState.name());
                 if (InitDriveState) {
-                    waitTime = DriveStateTime.milliseconds() + 1000;
-                    robot.lg_servo.setPosition(robot.LEFT_GRIP_SLIGHT_OPEN);
+                    turn(0.5, -0.5);
                     InitDriveState = false;
                 }
-                if (DriveStateTime.milliseconds() > waitTime) {
-                    newDriveState(DriveState.SLIGHT_RAISE_80);
-                } else {
-                    
-                }
-                break; //}    
-            
-            case SLIGHT_RAISE_80: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState) {
-                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    InitDriveState = false;
-                }
-                if (robot.elbowWithinRange(robot.ELBOW_SLIGHT_RAISE)){
-                    newDriveState(DriveState.BACKUP_TO_CLEAR_PIXEL_90);
-                } else {
-                    armControl(robot.ELBOW_MAX_SPEED, robot.ELBOW_SLIGHT_RAISE, robot.WRIST_PICKUP, 0.04);
-                }
-                break; //}
-                
-            case BACKUP_TO_CLEAR_PIXEL_90: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState) { // Start starting
-                    robot.resetDriveEncoders();
-                    robot.gyroDrive(-.1, 0.0, 0.03);
-                    InitDriveState = false;
-                }
-                if (gotDistance(-5, false)) { // Time to leave
-                    stopDrive();
-                    if ((colorSetting == Color.RED && sideSetting == Side.BACKDROP && propLocation == Prop.LEFT) ||
-                        (colorSetting == Color.BLUE && sideSetting == Side.AIRSTRIP && propLocation == Prop.LEFT)) {
-                        newDriveState(DriveState.STRAFE_OUT_FROM_UNDER_TRUSS_RIGHT_100);
-                    } else if ((colorSetting == Color.RED && sideSetting == Side.AIRSTRIP && propLocation == Prop.RIGHT) ||
-                               (colorSetting == Color.BLUE && sideSetting == Side.BACKDROP && propLocation == Prop.RIGHT)) {
-                        newDriveState(DriveState.STRAFE_OUT_FROM_UNDER_TRUSS_LEFT_105);
-                    } else {
-                        newDriveState(DriveState.TUCK_ARM_110);
-                    }
-                } else { // Stick around
-                    robot.gyroDrive(-.1, 0.0, 0.03);
-                }
-                break; //}
-
-            case STRAFE_OUT_FROM_UNDER_TRUSS_RIGHT_100: //{
-                    telemetry.addData("Drive state", CurrentDriveState.name());
-                    if (InitDriveState) { // Start starting
-                        robot.resetDriveEncoders();
-                        robot.gyroStrafe(.1, 0.0, 0.03);
-                        InitDriveState = false;
-                    }
-                    if (gotStrafeDistance(6, true)) {
+                if (gotAngle(-90,true)) {
                         stopDrive();
-                        newDriveState(DriveState.TUCK_ARM_110);
-                    }
-                    else {
-                        robot.gyroStrafe(.1, 0.0, 0.03);
-                    }
-                    break; //}
-            
-            case STRAFE_OUT_FROM_UNDER_TRUSS_LEFT_105: //{
-                    telemetry.addData("Drive state", CurrentDriveState.name());
-                    if (InitDriveState) { // Start starting
-                        robot.resetDriveEncoders();
-                        robot.gyroStrafe(-.1, 0.0, 0.03);
-                        InitDriveState = false;
-                    }
-                    if (gotStrafeDistance(-10, false)) {
-                        stopDrive();
-                        newDriveState(DriveState.TUCK_ARM_110);
-                    }
-                    else {
-                        robot.gyroStrafe(-.1, 0.0, 0.03);
-                    }
-                    break; //}
-                                           
-            case TUCK_ARM_110: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                if (InitDriveState) { // Start starting
-                    waitTime = DriveStateTime.milliseconds() + 500;
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK, robot.WRIST_TUCK, .02);
-                    InitDriveState = false;
-                }
-                if (DriveStateTime.milliseconds() > waitTime) {
-                    if (park || backPixel) {
-                        newDriveState(DriveState.TURN_TO_FACE_BACKDROP_120);   
-                    } else {
+                        //robot.setDrivePower(0, 0, 0, 0);
                         newDriveState(DriveState.END);
-                    }
                 } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK, robot.WRIST_TUCK, .02);
-                }
-                break; //}
-                
-            case TURN_TO_FACE_BACKDROP_120: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                // *** Things to do first time in a state ***
-                if (InitDriveState)
-                {
-                    if (colorSetting == Color.BLUE) {
-                        turn(-.1, .1);
-                    } else {
-                        turn(.1, -.1);
-                    }
-                    InitDriveState = false;
-                }
-                if (colorSetting == Color.BLUE) {
-                    if (gotAngle(90, false)) {  // Time to leave (Turned to heading, TRUE is clockwise)
-                        stopDrive();
-                        newDriveState(DriveState.DRIVE_TO_BACKBOARD_LINE_130);
-                    }
-                } else {    
-                    if (gotAngle(-90, true)) {  // Time to leave (Turned to heading, TRUE is clockwise)
-                        stopDrive();
-                        newDriveState(DriveState.DRIVE_TO_BACKBOARD_LINE_130);
-                    }
-                }
-                break; //}                
-                
-        case DRIVE_TO_BACKBOARD_LINE_130: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                // *** Things to do first time in a state ***
-                if (InitDriveState)
-                {
-                    if (colorSetting == Color.BLUE) {
-                        robot.gyroDrive(.2, 90.0, 0.03);   // Recommended gain around 0.03
-                    } else {
-                        robot.gyroDrive(.2, -90.0, 0.03);
-                    }
-                    InitDriveState = false;
-                }
-                // *** Reasons to leave state ***
-                if (gotLine()) { // Line Detected    
-                    stopDrive();
-                    if (backPixel) {
-                        newDriveState(DriveState.POSITION_ARM_FOR_BACKBOARD_140);
-                    } else {
-                        newDriveState(DriveState.STRAFE_TO_SIDE_OF_FIELD_200);
-                    }
-                // *** Things to do every time the state is looped through ***
-                } else {
-                    if (colorSetting == Color.BLUE) {
-                        robot.gyroDrive(.2, 90.0, 0.03);   // Recommended gain around 0.03
-                    } else {
-                        robot.gyroDrive(.2, -90.0, 0.03);
-                    }
-                }
-                break; //}                
-  
-            case POSITION_ARM_FOR_BACKBOARD_140: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                // *** Things to do first time in a state ***
-                if (InitDriveState)
-                {
-                    waitTime = DriveStateTime.milliseconds() + 1000; // Replace timeToWait with milliseconds
-                    InitDriveState = false;
-                }
-                // *** Reasons to leave state ***
-                if (DriveStateTime.milliseconds() > waitTime && robot.elbowWithinRange(robot.ELBOW_FRONT_DROP)) {  // timeToWait has elapsed
-                    newDriveState(DriveState.END);
-                // *** Things to do every time the state is looped through ***
-                } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP, robot.WRIST_FRONT_DROP, .02);  // if wrist does move
-                }
-                break; //}
-  
-            case STRAFE_TO_SIDE_OF_FIELD_200: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                // *** Things to do first time in a state ***
-                if (InitDriveState)
-                {
-                    robot.resetDriveEncoders();
-                    if (colorSetting == Color.BLUE) {
-                        robot.gyroStrafe(-.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
-                    } else {
-                        robot.gyroStrafe(.2, -90.0, 0.03);
-                    }
-                    InitDriveState = false;
-                }
-                // *** Reasons to leave state ***
-                if (colorSetting == Color.BLUE && gotStrafeDistance(-24, false)) {
-                    stopDrive();
-                    newDriveState(DriveState.DRIVE_INTO_CORNER_210); 
-                } else if (colorSetting == Color.RED && gotStrafeDistance(24, true)) {
-                    stopDrive();
-                    newDriveState(DriveState.DRIVE_INTO_CORNER_210);
-                } else {
-                    if (colorSetting == Color.BLUE) {
-                        robot.gyroStrafe(-.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
-                    } else {
-                        robot.gyroStrafe(.2, -90.0, 0.03);
-                    }
-                }
-                break; //}
-
-            case DRIVE_INTO_CORNER_210: //{
-                telemetry.addData("Drive state", CurrentDriveState.name());
-                // *** Things to do first time in a state ***
-                if (InitDriveState)
-                {
-                    robot.resetDriveEncoders();
-                    if (colorSetting == Color.BLUE) {
-                        robot.gyroDrive(.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
-                    } else {
-                        robot.gyroDrive(.2, -90.0, 0.03);
-                    }
-                    InitDriveState = false;
-                    
-                }
-                // *** Reasons to leave state ***
-                if (gotDistance(18, true)) {
-                    stopDrive();
-                    newDriveState(DriveState.END);
-                // *** Things to do every time the state is looped through ***
-                } else {
-                    if (colorSetting == Color.BLUE) {
-                        robot.gyroDrive(.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
-                    } else {
-                        robot.gyroDrive(.2, -90.0, 0.03);
-                    }
+                        
                 }
                 break; //}
                 
