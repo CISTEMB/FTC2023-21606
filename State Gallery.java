@@ -38,6 +38,7 @@ Gallery of standard, full featured, states
 					// robot.gyroStrafe(speed, heading, gain);  // Positive speed is right, Recommended gain around 0.03
 					// turn(leftSpeed, RightSpeed);
                     InitDriveState = false;
+				}
 				// *** Reasons to leave state ***
                 if (DriveStateTime.milliseconds() > waitTime) {  // timeToWait has elapsed
                     stopDrive();
@@ -71,23 +72,99 @@ Gallery of standard, full featured, states
 					// robot.lg_servo.setPosition(servo position);
 					// robot.rg_servo.setPosition(servo position);
                     InitDriveState = false;
+				}
 				// *** Reasons to leave state ***
                 if (DriveStateTime.milliseconds() > waitTime) {  // timeToWait has elapsed
                     newDriveState(DriveState.NEXT_STATE);
                 } else if (robot.elbowWithinRange(elbowTargetPosition)){ // Elbow move finished
                     newDriveState(DriveState.NEXT_STATE); 
-				} else if (gotStrafeDistance(targetDistance, true)){ // Strafed to distance, TRUE is moving right
-                    newDriveState(DriveState.NEXT_STATE); 
-                } else if (gotAngle(targetHeading,true)) {  // Turned to heading, TRUE is clockwise
-                    newDriveState(DriveState.NEXT_STATE); 
-				} else if (DriveStateTime.milliseconds() > waitTime) {  // timeToWait has elapsed
-                    newDriveState(DriveState.NEXT_STATE);
 				// *** Things to do every time the state is looped through ***
                 } else {
 					// armControl (robot.ELBOW_MAX_SPEED, elbowTargetPosition, wristPlace, .02);  // If wrist does not move
 					// armControl (robot.ELBOW_MAX_SPEED, elbowTargetPosition, wristTargetPosition, .02);  // if wrist does move
                 }
                 break; //}
+				
+			case EXAMPLE_DRIVE: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                // *** Things to do first time in a state ***
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    if (colorSetting == Color.BLUE) {
+                        robot.gyroDrive(.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
+                    } else {
+                        robot.gyroDrive(.2, -90.0, 0.03);
+                    }
+                    InitDriveState = false;
+                }
+                // *** Reasons to leave state ***
+                if (gotDistance(18, true)) {
+                    stopDrive();
+                    newDriveState(DriveState.END);
+                // *** Things to do every time the state is looped through ***
+                } else {
+                    if (colorSetting == Color.BLUE) {
+                        robot.gyroDrive(.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
+                    } else {
+                        robot.gyroDrive(.2, -90.0, 0.03);
+                    }
+                }
+                break; //}
+				
+            case EXAMPLE_STRAFE: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                // *** Things to do first time in a state ***
+                if (InitDriveState)
+                {
+                    robot.resetDriveEncoders();
+                    if (colorSetting == Color.BLUE) {
+                        robot.gyroStrafe(-.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
+                    } else {
+                        robot.gyroStrafe(.2, -90.0, 0.03);
+                    }
+                    InitDriveState = false;
+                }
+                // *** Reasons to leave state ***
+                if (colorSetting == Color.BLUE && gotStrafeDistance(-24, false)) {
+                    stopDrive();
+                    newDriveState(DriveState.DRIVE_INTO_CORNER_210); 
+                } else if (colorSetting == Color.RED && gotStrafeDistance(24, true)) {
+                    stopDrive();
+                    newDriveState(DriveState.DRIVE_INTO_CORNER_210);
+                } else {
+                    if (colorSetting == Color.BLUE) {
+                        robot.gyroStrafe(-.2, 90.0, 0.03);  // Positive speed is right, Recommended gain around 0.03
+                    } else {
+                        robot.gyroStrafe(.2, -90.0, 0.03);
+                    }
+                }
+                break; //}
+				
+			case EXAMPLE_TURN: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                // *** Things to do first time in a state ***
+                if (InitDriveState)
+                {
+                    if (colorSetting == Color.BLUE) {
+                        turn(-.1, .1);
+                    } else {
+                        turn(.1, -.1);
+                    }
+                    InitDriveState = false;
+                }
+                if (colorSetting == Color.BLUE) {
+                    if (gotAngle(90, false)) {  // Time to leave (Turned to heading, TRUE is clockwise)
+                        stopDrive();
+                        newDriveState(DriveState.DRIVE_TO_BACKBOARD_LINE_130);
+                    }
+                } else {    
+                    if (gotAngle(-90, true)) {  // Time to leave (Turned to heading, TRUE is clockwise)
+                        stopDrive();
+                        newDriveState(DriveState.DRIVE_TO_BACKBOARD_LINE_130);
+                    }
+                }
+                break; //}  
 				
 				/*
 				**** Example flag fields for compound if statements ***
