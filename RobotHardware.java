@@ -123,7 +123,7 @@ public class RobotHardware
   public double ELBOW_MAX_SPEED = .75;
   public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
-  public double RIGHT_GRIP_CLOSED = 0.5;  // right grip closes on high
+  public double RIGHT_GRIP_CLOSED = 0.52;  // right grip closes on high
   public double RIGHT_GRIP_OPEN = 0.2;
   public double LEFT_GRIP_CLOSED = 0.38; //left grip closes on low
   public double LEFT_GRIP_OPEN = 0.65; 
@@ -463,9 +463,9 @@ public class RobotHardware
     } else { //Left side
       sideDistance = leftd_sensor.getDistance(DistanceUnit.INCH);
     }
-	if (sideDistance > 321) {
-		SIDE_SENSOR_FAULT = true;
-	}
+    if (sideDistance > 321) {
+        SIDE_SENSOR_FAULT = true;
+    }
     telemetry.addData("dist", sideDistance);
     if (movingToward) { //Moving toward the object
       if (sideDistance <= distance) {

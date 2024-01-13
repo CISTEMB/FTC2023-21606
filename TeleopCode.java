@@ -67,9 +67,9 @@ public class TeleopCode extends OpMode
     private boolean front_drop_pos_btn;
     private boolean front_drop_pos_btn_old = false;
     private boolean front_drop_pos_btn_press = false;
-    private boolean reset_btn;
-    private boolean reset_btn_old = false;
-    private boolean reset_btn_press = false;
+    //private boolean reset_btn;
+    //private boolean reset_btn_old = false;
+    //private boolean reset_btn_press = false;
 
     
     private boolean right_grip_btn;
@@ -220,20 +220,23 @@ public class TeleopCode extends OpMode
             pickup_pos_btn_press = false;
         }
         pickup_pos_btn_old = pickup_pos_btn;
-        front_drop_pos_btn = gamepad2.a;
+        
+        front_drop_pos_btn = gamepad2.x;
         if (!front_drop_pos_btn_old && front_drop_pos_btn) {
             front_drop_pos_btn_press = true;
         } else {
             front_drop_pos_btn_press = false;
         }
         front_drop_pos_btn_old = front_drop_pos_btn;
-        reset_btn = gamepad2.left_bumper;
+        
+        /*reset_btn = gamepad2.left_bumper;
         if (!reset_btn_old && reset_btn) {
             reset_btn_press = true;
         } else {
             reset_btn_press = false;
         }
-        reset_btn_old = reset_btn;
+        reset_btn_old = reset_btn;*/
+        
         tuck_pos_btn = gamepad2.y;
         if (!tuck_pos_btn_old && tuck_pos_btn) {
             tuck_pos_btn_press = true;
@@ -241,6 +244,7 @@ public class TeleopCode extends OpMode
             tuck_pos_btn_press = false;
         }
         tuck_pos_btn_old = tuck_pos_btn;
+        
         back_pos_btn = (gamepad2.b && !gamepad2.start);
         if (!back_pos_btn_old && back_pos_btn) {
             back_pos_btn_press = true;
@@ -413,7 +417,7 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PREPICKUP);
                 }
                 else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , .02);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , 1);
                     // gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
@@ -457,6 +461,7 @@ public class TeleopCode extends OpMode
                     gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
+                
             case ARM_STATE_FRONT_DROP://{
                 telemetry.addData("Arm state", "Front Drop");
                 if (InitArmState) {
@@ -475,7 +480,7 @@ public class TeleopCode extends OpMode
                 }
                 break;//}
 
-			case ARM_STATE_TUCK_DOWN://{
+            case ARM_STATE_TUCK_DOWN://{
                 telemetry.addData("Arm state", "Tuck down");
                 if (InitArmState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -493,14 +498,14 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_TUCK_RESET);
                 }
                 else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , .02);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , .2);
                     // gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
-				
+                
             case ARM_STATE_TUCK_RESET://{
                 telemetry.addData("Arm state", "Tuck: reset");
-				int currentElbowReading = robot.elbow_motor.getCurrentPosition();
+                int currentElbowReading = robot.elbow_motor.getCurrentPosition();
                 if (InitArmState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     robot.setElbowPower(-0.2);
@@ -508,9 +513,9 @@ public class TeleopCode extends OpMode
                 }
                 if (currentElbowReading == prevElbowReading) {
                     //elbowStayingSameCount++;
-					robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-					newArmState(ArmState.ARM_STATE_TUCK);
-				}
+                    robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    newArmState(ArmState.ARM_STATE_TUCK);
+                }
              /*   } else if (!(prevElbowReading-2 < robot.elbow_motor.getCurrentPosition() && prevElbowReading+2 > robot.elbow_motor.getCurrentPosition())) {
                     elbowStayingSameCount = 0;
                 }
