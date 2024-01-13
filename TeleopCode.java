@@ -107,6 +107,8 @@ public class TeleopCode extends OpMode
         ARM_STATE_TUCK,
         ARM_STATE_ELBOW_HOLD,
         ARM_STATE_FRONT_DROP,
+        ARM_STATE_TUCK_DOWN,
+        ARM_STATE_TUCK_RESET,
         ARM_STATE_END, // Might not need, there for structure's sake
     };
     
@@ -117,6 +119,8 @@ public class TeleopCode extends OpMode
     /////Arm Preset Constants ////// {
     private double wristPlace = 0;
     private int elbowHold = 0;
+    private int prevElbowReading = -9999;
+    private int elbowStayingSameCount = 0;
     //}
     
     // }
@@ -364,7 +368,7 @@ public class TeleopCode extends OpMode
                 } else if(front_drop_pos_btn_press) {
                     newArmState(ArmState.ARM_STATE_FRONT_DROP);
                 } else if (robot.elbowWithinRange(robot.ELBOW_PRETUCK)){
-                    newArmState(ArmState.ARM_STATE_TUCK);
+                    newArmState(ArmState.ARM_STATE_TUCK_DOWN);
                 } else {
                     armControl (robot.ELBOW_PRETUCK_MAX_SPEED, robot.ELBOW_PRETUCK,  wristPlace , 0);
                     // gripperControl(right_grip_btn, left_grip_btn);
@@ -401,7 +405,7 @@ public class TeleopCode extends OpMode
                 }
                 if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
-                }  else if(back_pos_btn_press){
+                } else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
                 } else if(front_drop_pos_btn_press) {
                     newArmState(ArmState.ARM_STATE_FRONT_DROP);
@@ -468,6 +472,59 @@ public class TeleopCode extends OpMode
                 } else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP, robot.WRIST_FRONT_DROP, .1);
                     gripperControl(right_grip_btn, left_grip_btn);
+                }
+                break;//}
+
+			case ARM_STATE_TUCK_DOWN://{
+                telemetry.addData("Arm state", "Tuck down");
+                if (InitArmState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    InitArmState = false;
+                }
+                if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } else if(back_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
+                } else if(pickup_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
+                } else if(robot.elbowWithinRange(robot.ELBOW_TUCK)){
+                    newArmState(ArmState.ARM_STATE_TUCK_RESET);
+                }
+                else {
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_TUCK,  robot.WRIST_TUCK , .02);
+                    // gripperControl(right_grip_btn, left_grip_btn);
+                }
+                break;//}
+				
+            case ARM_STATE_TUCK_RESET://{
+                telemetry.addData("Arm state", "Tuck: reset");
+				int currentElbowReading = robot.elbow_motor.getCurrentPosition();
+                if (InitArmState) {
+                    robot.elbow_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    robot.setElbowPower(-0.2);
+                    InitArmState = false;
+                }
+                if (currentElbowReading == prevElbowReading) {
+                    //elbowStayingSameCount++;
+					robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+					newArmState(ArmState.ARM_STATE_TUCK);
+				}
+             /*   } else if (!(prevElbowReading-2 < robot.elbow_motor.getCurrentPosition() && prevElbowReading+2 > robot.elbow_motor.getCurrentPosition())) {
+                    elbowStayingSameCount = 0;
+                }
+                if (elbowStayingSameCount >= 5) {
+                    newArmState(ArmState.ARM_STATE_TUCK_RESET);
+                }*/
+                else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                    newArmState(ArmState.ARM_STATE_MANUAL);
+                } else if(back_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_BACK);
+                } else if(front_drop_pos_btn_press) {
+                    newArmState(ArmState.ARM_STATE_FRONT_DROP);
+                } else if(pickup_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
                 }
                 break;//}
          }
