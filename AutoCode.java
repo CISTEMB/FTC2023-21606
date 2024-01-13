@@ -79,6 +79,7 @@ public class AutoCode extends OpMode
     private double targetDistanceFromWall;
     private double distanceFromWall;
     private boolean moveRight = true;
+	private boolean underTruss = false;
                 
 
 
@@ -128,6 +129,7 @@ public class AutoCode extends OpMode
         TUCK_ARM_190,
         STRAFE_TO_SIDE_OF_FIELD_200,
         DRIVE_INTO_CORNER_210,
+		SIDE_SENSOR_FAULT,
         END,
         // TEST_TURN,
     };
@@ -433,14 +435,19 @@ public class AutoCode extends OpMode
                     robot.resetDriveEncoders();
                     robot.gyroDrive(-.2, 0.0, 0.03);
                     InitDriveState = false;
+					if ((colorSetting == Color.RED  && sideSetting == Side.BACKDROP && propLocation == Prop.LEFT) ||
+                        (colorSetting == Color.BLUE && sideSetting == Side.AIRSTRIP && propLocation == Prop.LEFT) ||
+						(colorSetting == Color.RED  && sideSetting == Side.AIRSTRIP && propLocation == Prop.RIGHT)||
+                        (colorSetting == Color.BLUE && sideSetting == Side.BACKDROP && propLocation == Prop.RIGHT)){
+						underTruss = true;
+					}
+						
                 }
                 if (gotDistance(-5, false)) { // Time to leave
                     stopDrive();
-                    if ((colorSetting == Color.RED && sideSetting == Side.BACKDROP && propLocation == Prop.LEFT) ||
-                        (colorSetting == Color.BLUE && sideSetting == Side.AIRSTRIP && propLocation == Prop.LEFT)) {
+                    if (underTruss && propLocation == Prop.LEFT) {
                         newDriveState(DriveState.STRAFE_OUT_FROM_UNDER_TRUSS_RIGHT_100);
-                    } else if ((colorSetting == Color.RED && sideSetting == Side.AIRSTRIP && propLocation == Prop.RIGHT) ||
-                               (colorSetting == Color.BLUE && sideSetting == Side.BACKDROP && propLocation == Prop.RIGHT)) {
+                    } else if (underTruss && propLocation == Prop.RIGHT){
                         newDriveState(DriveState.STRAFE_OUT_FROM_UNDER_TRUSS_LEFT_105);
                     } else {
                         newDriveState(DriveState.TUCK_ARM_110);
@@ -644,8 +651,9 @@ public class AutoCode extends OpMode
                 } else if (colorSetting == Color.RED && !moveRight && robot.gotSideDistance(targetDistanceFromWall, true, false)){
                     stopDrive();
                     newDriveState(DriveState.FINAL_APPROACH_BACKBOARD_160);
-                
-                
+                } else if (robot.SIDE_SENSOR_FAULT){
+					stopDrive();
+					newDriveState(DriveState.SIDE_SENSOR_FAULT);
                 } else {
                     if (colorSetting == Color.BLUE) {
                         if(moveRight){robot.gyroStrafe(0.2, 90, 0.03);  }
@@ -808,6 +816,16 @@ public class AutoCode extends OpMode
                 if (true)
                 {
                     stopDrive();
+                }
+                break; //}
+				
+			case SIDE_SENSOR_FAULT: //{
+                telemetry.addData("Drive state", CurrentDriveState.name());
+                if (true)
+                {
+                    stopDrive();
+					telemetry.addData("Left Sensor",  robot.leftd_sensor.getDistance(DistanceUnit.INCH));
+					telemetry.addData("Right Sensor",  robot.rightd_sensor.getDistance(DistanceUnit.INCH));
                 }
                 break; //}
         }

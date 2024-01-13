@@ -148,6 +148,8 @@ public class RobotHardware
   public double HOLD_DRONE = 1;
   //}
 
+  public boolean SIDE_SENSOR_FAULT = false;
+
   /**
    * Create a RobotHardware instance and return it
    * The init() method MUST be called afterward before any other method is called!
@@ -461,6 +463,9 @@ public class RobotHardware
     } else { //Left side
       sideDistance = leftd_sensor.getDistance(DistanceUnit.INCH);
     }
+	if (sideDistance > 321) {
+		SIDE_SENSOR_FAULT = true;
+	}
     telemetry.addData("dist", sideDistance);
     if (movingToward) { //Moving toward the object
       if (sideDistance <= distance) {
