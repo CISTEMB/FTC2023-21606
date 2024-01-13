@@ -128,6 +128,7 @@ public class RobotHardware
   public double LEFT_GRIP_CLOSED = 0.38; //left grip closes on low
   public double LEFT_GRIP_OPEN = 0.65; 
   public double LEFT_GRIP_SLIGHT_OPEN = 0.52;
+  public double RIGHT_GRIP_SLIGHT_OPEN = 0.35;
 
   public double LEFT_HANG_SERVO_INIT = 0;
   public double RIGHT_HANG_SERVO_INIT = 1;
@@ -453,13 +454,14 @@ public class RobotHardware
     telemetry.addData("RobotHardware","Hang motor power: (%.2f)",power);
   }
 
-  public void gotSideDistance(double distance, boolean rightSide, boolean movingToward) {
+  public boolean gotSideDistance(double distance, boolean rightSide, boolean movingToward) {
     double sideDistance = -1;
     if (rightSide) { //Right side
       sideDistance = rightd_sensor.getDistance(DistanceUnit.INCH);
     } else { //Left side
       sideDistance = leftd_sensor.getDistance(DistanceUnit.INCH);
     }
+    telemetry.addData("dist", sideDistance);
     if (movingToward) { //Moving toward the object
       if (sideDistance <= distance) {
         return true;
