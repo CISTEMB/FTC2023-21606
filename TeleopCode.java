@@ -70,6 +70,8 @@ public class TeleopCode extends OpMode
     //private boolean reset_btn;
     //private boolean reset_btn_old = false;
     //private boolean reset_btn_press = false;
+    private double tuckResetDuration = 250;
+    private double tuckResetTime = 99999;
 
     
     private boolean right_grip_btn;
@@ -474,7 +476,9 @@ public class TeleopCode extends OpMode
                     newArmState(ArmState.ARM_STATE_PRETUCK);
                 } else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);
-                } else {
+                } else if(pickup_pos_btn_press){
+                    newArmState(ArmState.ARM_STATE_PREPICKUP);
+                }  else {
                     armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP, robot.WRIST_FRONT_DROP, .1);
                     gripperControl(right_grip_btn, left_grip_btn);
                 }
@@ -505,28 +509,33 @@ public class TeleopCode extends OpMode
                 
             case ARM_STATE_TUCK_RESET://{
                 telemetry.addData("Arm state", "Tuck: reset");
-                int currentElbowReading = robot.elbow_motor.getCurrentPosition();
+                /*int currentElbowReading = robot.elbow_motor.getCurrentPosition();
                 int RESET_RANGE = 2;
-                int RESET_COUNT = 5;
+                int RESET_COUNT = 5; */
                 if (InitArmState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     robot.setElbowPower(-0.2);
+                    tuckResetTime = DriveStateTime.milliseconds() + tuckResetDuration;
                     InitArmState = false;
-                }
+                } 
+                
                /* if (currentElbowReading == prevElbowReading) {
                     //elbowStayingSameCount++;
                     robot.setElbowPower(0);
                     robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     newArmState(ArmState.ARM_STATE_TUCK);
                 }*/
-                if ((currentElbowReading-RESET_RANGE <= prevElbowReading) && 
+                /*if ((currentElbowReading-RESET_RANGE <= prevElbowReading) && 
                     (currentElbowReading+RESET_RANGE >= prevElbowReading)) {
                     elbowStayingSameCount++;
                 } else {
                     elbowStayingSameCount = 0;
                 }
                 if (elbowStayingSameCount >= 5) {
-                    newArmState(ArmState.ARM_STATE_TUCK_RESET);
+                    newArmState(ArmState.ARM_STATE_TUCK_RESET);*/
+                if (DriveStateTime.milliseconds() > tuckResetTime){
+                    robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    newArmState(ArmState.ARM_STATE_TUCK);
                 } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else if(back_pos_btn_press){
