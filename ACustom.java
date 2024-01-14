@@ -49,9 +49,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@Autonomous(name="A Spike Only", group="AutoX", preselectTeleOp="Teleop Code")
+@Autonomous(name="A Custom", group="AutoX", preselectTeleOp="Teleop Code")
 
-public class ASpikeOnly extends OpMode
+public class ACustom extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
