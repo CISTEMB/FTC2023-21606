@@ -506,23 +506,28 @@ public class TeleopCode extends OpMode
             case ARM_STATE_TUCK_RESET://{
                 telemetry.addData("Arm state", "Tuck: reset");
                 int currentElbowReading = robot.elbow_motor.getCurrentPosition();
+                int RESET_RANGE = 2;
+                int RESET_COUNT = 5;
                 if (InitArmState) {
                     robot.elbow_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     robot.setElbowPower(-0.2);
                     InitArmState = false;
                 }
-                if (currentElbowReading == prevElbowReading) {
+               /* if (currentElbowReading == prevElbowReading) {
                     //elbowStayingSameCount++;
+                    robot.setElbowPower(0);
                     robot.elbow_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     newArmState(ArmState.ARM_STATE_TUCK);
-                }
-             /*   } else if (!(prevElbowReading-2 < robot.elbow_motor.getCurrentPosition() && prevElbowReading+2 > robot.elbow_motor.getCurrentPosition())) {
+                }*/
+                if ((currentElbowReading-RESET_RANGE <= prevElbowReading) && 
+                    (currentElbowReading+RESET_RANGE >= prevElbowReading)) {
+                    elbowStayingSameCount++;
+                } else {
                     elbowStayingSameCount = 0;
                 }
                 if (elbowStayingSameCount >= 5) {
                     newArmState(ArmState.ARM_STATE_TUCK_RESET);
-                }*/
-                else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
+                } else if (!(-0.01<elbow_joy && elbow_joy<0.01)) {
                     newArmState(ArmState.ARM_STATE_MANUAL);
                 } else if(back_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_BACK);

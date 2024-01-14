@@ -399,7 +399,10 @@ public class AutoCodeHM extends OpMode
                     robot.resetDriveEncoders();
                     robot.gyroStrafe(.2, 0.0, 0.03);
                     InitDriveState = false;
-                } else if (gotStrafeDistance(1.5,true)) {
+                } else if (colorSetting == Color.BLUE && gotStrafeDistance(1,true)) {
+                    stopDrive();           
+                    newDriveState(DriveState.SLIGHT_DROP_70);
+                }else if (colorSetting == Color.RED && gotStrafeDistance(2.5,true)) {
                     stopDrive();           
                     newDriveState(DriveState.SLIGHT_DROP_70);
                 }
@@ -534,12 +537,15 @@ public class AutoCodeHM extends OpMode
                 }
                 if (colorSetting == Color.BLUE) {
                     if (gotAngle(85, false)) {  // Time to leave (Turned to heading, TRUE is clockwise)
+                    
                         stopDrive();
+                        robot.resetDriveEncoders();
                         newDriveState(DriveState.DRIVE_TO_BACKBOARD_FAST_125);
                     }
                 } else {    
                     if (gotAngle(-85, true)) {  // Time to leave (Turned to heading, TRUE is clockwise)
                         stopDrive();
+                        robot.resetDriveEncoders();
                         newDriveState(DriveState.DRIVE_TO_BACKBOARD_FAST_125);
                     }
                 }
@@ -628,18 +634,18 @@ public class AutoCodeHM extends OpMode
                     
                     if (colorSetting == Color.BLUE) {
                         distanceFromWall = robot.leftd_sensor.getDistance(DistanceUnit.INCH);
-                        if (propLocation == Prop.LEFT) {targetDistanceFromWall = 19;}
-                        else if (propLocation == Prop.CENTER) {targetDistanceFromWall = 25;}
-                        else {targetDistanceFromWall = 29;}  // righh
+                        if (propLocation == Prop.LEFT) {targetDistanceFromWall = 20;}
+                        else if (propLocation == Prop.CENTER) {targetDistanceFromWall = 26;}
+                        else {targetDistanceFromWall = 31;}  // righh
                         if(targetDistanceFromWall < distanceFromWall) {moveRight = false;}
                         if(moveRight){robot.gyroStrafe(0.2, 90, 0.03);  }
                         else {robot.gyroStrafe(-0.2, 90, 0.03);}
                     }
                     if (colorSetting == Color.RED) {
                         distanceFromWall = robot.rightd_sensor.getDistance(DistanceUnit.INCH);
-                        if (propLocation == Prop.LEFT) {targetDistanceFromWall = 30;}//35
-                        else if (propLocation == Prop.CENTER) {targetDistanceFromWall = 27;}
-                        else {targetDistanceFromWall = 23;}  // righh
+                        if (propLocation == Prop.LEFT) {targetDistanceFromWall = 36;}//35
+                        else if (propLocation == Prop.CENTER) {targetDistanceFromWall = 26;}
+                        else {targetDistanceFromWall = 20;}  // righh
                         
                         if(targetDistanceFromWall > distanceFromWall) {moveRight = false;}//
                         
@@ -780,10 +786,10 @@ public class AutoCodeHM extends OpMode
                     InitDriveState = false;
                 }
                 // *** Reasons to leave state ***
-                if (colorSetting == Color.BLUE &&  robot.gotSideDistance(2, false, true)) {
+                if (colorSetting == Color.BLUE &&  robot.gotSideDistance(4, false, true)) {
                     stopDrive();
                     newDriveState(DriveState.DRIVE_INTO_CORNER_210); 
-                } else if (colorSetting == Color.RED && robot.gotSideDistance(2, true, true)) {
+                } else if (colorSetting == Color.RED && robot.gotSideDistance(4, true, true)) {
                     stopDrive();
                     newDriveState(DriveState.DRIVE_INTO_CORNER_210);
                 } else {
@@ -842,6 +848,7 @@ public class AutoCodeHM extends OpMode
                 }
                 if (gotLine()) {  // Time to leave
                     stopDrive();
+                    robot.resetDriveEncoders();
                     newDriveState(DriveState.HM_STAFE_PAST_PIXELS_310);
                 } else if (gotStrafeDistance(15, true)){ 
                     newDriveState(DriveState.END);
@@ -874,10 +881,16 @@ public class AutoCodeHM extends OpMode
                     InitDriveState = false;
                 }
                 // *** Reasons to leave state ***
-                if (colorSetting == Color.BLUE && gotStrafeDistance(9, true)) {
+                if (colorSetting == Color.BLUE && propLocation == Prop.RIGHT && gotStrafeDistance(6, true)) {
                     stopDrive();
                     newDriveState(DriveState.HM_DRIVE_FORWARD_TO_CENTER_320); 
-                } else if (colorSetting == Color.RED && gotStrafeDistance(-9, false)) {
+                } else if (colorSetting == Color.BLUE && !(propLocation == Prop.RIGHT) && gotStrafeDistance(5.5, true)) {
+                    stopDrive();
+                    newDriveState(DriveState.HM_DRIVE_FORWARD_TO_CENTER_320); 
+                } else if (colorSetting == Color.RED && propLocation == Prop.LEFT && gotStrafeDistance(-9, false)) {
+                    stopDrive();
+                    newDriveState(DriveState.HM_DRIVE_FORWARD_TO_CENTER_320);
+                } else if (colorSetting == Color.RED && !(propLocation == Prop.LEFT) && gotStrafeDistance(-5, false)) {
                     stopDrive();
                     newDriveState(DriveState.HM_DRIVE_FORWARD_TO_CENTER_320);
                 } else {
@@ -901,7 +914,7 @@ public class AutoCodeHM extends OpMode
                 // *** Reasons to leave state ***
                 if ((underTruss && gotDistance(26, true)) || // under truss
                     (propLocation == Prop.CENTER && gotDistance(26, true)) ||
-                    (!underTruss && !(propLocation == Prop.CENTER) && gotDistance(30, true))){    
+                    (!underTruss && !(propLocation == Prop.CENTER) && gotDistance(29, true))){    
                     stopDrive();
                     newDriveState(DriveState.HM_TURN_TO_BACK_330);
                 // *** Things to do every time the state is looped through ***
@@ -953,7 +966,7 @@ public class AutoCodeHM extends OpMode
                 if (park && gotDistance(116, true)) {
                     stopDrive();
                     newDriveState(DriveState.END);
-                } else if (backPixel && gotDistance(108, true)) {
+                } else if (backPixel && gotDistance(104, true)) {
                     stopDrive();
                     newDriveState(DriveState.HM_STRAFE_TO_BACK_350);
                 // *** Things to do every time the state is looped through ***
