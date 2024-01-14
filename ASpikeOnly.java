@@ -49,9 +49,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@Autonomous(name="Auto Code HM", group="Practice", preselectTeleOp="Teleop Code")
+@Autonomous(name="A Spike Only", group="Practice", preselectTeleOp="Teleop Code")
 
-public class AutoCodeHM extends OpMode
+public class ASpikeOnly extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
@@ -182,8 +182,8 @@ public class AutoCodeHM extends OpMode
     sideSetting = Side.AIRSTRIP;
 //    backPixel = true;
     backPixel = false;
-    park = true;
-//    park = false;
+//    park = true;
+    park = false;
 //*************************************************
         
         boolean initializationStatus = robot.init();
