@@ -118,10 +118,14 @@ public class RobotHardware
   public double WRIST_PICKUP = 1;
   public int ELBOW_PICKUP = 0;
   public int ELBOW_SLIGHT_RAISE = 20;
- // public int ELBOW_FRONT_DROP = 97;
+  //public int ELBOW_FRONT_DROP = 97;
   public int ELBOW_FRONT_DROP = 115;
+  public int ELBOW_FRONT_DROP_H = 115;
+  public int ELBOW_FRONT_DROP_L = 97;
   //public double WRIST_FRONT_DROP = 0.887657;
   public double WRIST_FRONT_DROP = .799;
+  public double WRIST_FRONT_DROP_H = .799;
+  public double WRIST_FRONT_DROP_L = 0.887657; 
   public double ELBOW_MAX_SPEED = .75;
   public double ELBOW_PRETUCK_MAX_SPEED = 1;
   
@@ -141,9 +145,13 @@ public class RobotHardware
   // }
   
   // declare constants for autonomous {
-  public int RED_LIMIT = 700;
+  public int RED_LIMIT = 800;
   public int BLUE_LIMIT = 1500;
   // }
+  
+  //
+  public double HANG_HOLD_POWER = 0.3;
+  public double HANG_PULL_POWER = 0.4;
   
   // declare constants for launcher
   public double LAUNCH_DRONE = 0;

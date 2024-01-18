@@ -49,9 +49,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@Autonomous(name="A Red Back PixPark", group="AutoRed", preselectTeleOp="Teleop Code")
+@Autonomous(name="A Spike Truss Left", group="AutoX", preselectTeleOp="Teleop Code")
 
-public class ARedBackPixPark extends OpMode
+public class ASpikeTrussLeft extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
@@ -176,14 +176,14 @@ public class ARedBackPixPark extends OpMode
 //***************************************************
 //** SET AUTO DEFAULTS ******************************
 //***************************************************
-    colorSetting = Color.RED;
-//    colorSetting = Color.BLUE;
-    sideSetting = Side.BACKDROP;
-//    sideSetting = Side.AIRSTRIP;
-    backPixel = true;
-//    backPixel = false;
-    park = true;
-//    park = false;
+//  colorSetting = Color.RED;
+    colorSetting = Color.BLUE;
+//    sideSetting = Side.BACKDROP;
+    sideSetting = Side.AIRSTRIP;
+//    backPixel = true;
+    backPixel = false;
+//    park = true;
+    park = false;
 //*************************************************
         
         boolean initializationStatus = robot.init();

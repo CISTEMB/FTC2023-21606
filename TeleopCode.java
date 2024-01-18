@@ -479,7 +479,7 @@ public class TeleopCode extends OpMode
                 } else if(pickup_pos_btn_press){
                     newArmState(ArmState.ARM_STATE_PREPICKUP);
                 }  else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP, robot.WRIST_FRONT_DROP, .1);
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP_H, robot.WRIST_FRONT_DROP_H, .1);
                     gripperControl(right_grip_btn, left_grip_btn);
                 }
                 break;//}
@@ -609,7 +609,7 @@ public class TeleopCode extends OpMode
                     robot.right_hang_motor.setTargetPosition(rightLiftMotorHold);
                     robot.left_hang_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     robot.right_hang_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    robot.setHangPower(0.3);
+                    robot.setHangPower(robot.HANG_HOLD_POWER);
                     InitLIFTAState = false;
                 }
                 if (d1Pull_btn || d2Pull_btn) {
@@ -620,7 +620,7 @@ public class TeleopCode extends OpMode
                 if (InitLIFTAState) {
                     robot.left_hang_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     robot.right_hang_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    robot.setHangPower(0.3);
+                    robot.setHangPower(robot.HANG_PULL_POWER);
                     InitLIFTAState = false;
                 }
                 if (!(d1Pull_btn || d2Pull_btn)) {

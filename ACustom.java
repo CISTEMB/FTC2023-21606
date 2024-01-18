@@ -49,7 +49,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@Autonomous(name="A Custom", group="AutoX", preselectTeleOp="Teleop Code")
+@Autonomous(name="A Custom Low", group="AutoX", preselectTeleOp="Teleop Code")
 
 public class ACustom extends OpMode
 {
@@ -628,11 +628,11 @@ public class ACustom extends OpMode
                     InitDriveState = false;
                 }
                 // *** Reasons to leave state ***
-                if (DriveStateTime.milliseconds() > waitTime && robot.elbowWithinRange(robot.ELBOW_FRONT_DROP)) {  // timeToWait has elapsed
+                if (DriveStateTime.milliseconds() > waitTime && robot.elbowWithinRange(robot.ELBOW_FRONT_DROP_L)) {  // timeToWait has elapsed
                     newDriveState(DriveState.STRAFE_TO_LINE_UP_PIXEL_150);
                 // *** Things to do every time the state is looped through ***
                 } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP, robot.WRIST_FRONT_DROP, 1);  // if wrist does move
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP_L, robot.WRIST_FRONT_DROP_L, 1);  // if wrist does move
                 }
                 break; //}
   

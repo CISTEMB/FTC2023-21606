@@ -49,9 +49,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Add a line that says "@Disabled" line to remove this OpMode from the Driver Station OpMode list
  */
 
-@Autonomous(name="A Blue Back PixPark", group="AutoBlue", preselectTeleOp="Teleop Code")
+@Autonomous(name="A Custom High", group="AutoX", preselectTeleOp="Teleop Code")
 
-public class ABlueBackPixPark extends OpMode
+public class ACustomHigh extends OpMode
 {
     private RobotHardware robot = new RobotHardware(this);
     
@@ -176,14 +176,14 @@ public class ABlueBackPixPark extends OpMode
 //***************************************************
 //** SET AUTO DEFAULTS ******************************
 //***************************************************
-//    colorSetting = Color.RED;
-    colorSetting = Color.BLUE;
-    sideSetting = Side.BACKDROP;
-//    sideSetting = Side.AIRSTRIP;
-    backPixel = true;
-//    backPixel = false;
-    park = true;
-//    park = false;
+    colorSetting = Color.RED;
+//    colorSetting = Color.BLUE;
+//    sideSetting = Side.BACKDROP;
+    sideSetting = Side.AIRSTRIP;
+//    backPixel = true;
+    backPixel = false;
+//    park = true;
+    park = false;
 //*************************************************
         
         boolean initializationStatus = robot.init();
@@ -628,11 +628,11 @@ public class ABlueBackPixPark extends OpMode
                     InitDriveState = false;
                 }
                 // *** Reasons to leave state ***
-                if (DriveStateTime.milliseconds() > waitTime && robot.elbowWithinRange(robot.ELBOW_FRONT_DROP)) {  // timeToWait has elapsed
+                if (DriveStateTime.milliseconds() > waitTime && robot.elbowWithinRange(robot.ELBOW_FRONT_DROP_H)) {  // timeToWait has elapsed
                     newDriveState(DriveState.STRAFE_TO_LINE_UP_PIXEL_150);
                 // *** Things to do every time the state is looped through ***
                 } else {
-                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP, robot.WRIST_FRONT_DROP, 1);  // if wrist does move
+                    armControl (robot.ELBOW_MAX_SPEED, robot.ELBOW_FRONT_DROP_H, robot.WRIST_FRONT_DROP_H, 1);  // if wrist does move
                 }
                 break; //}
   
