@@ -4,15 +4,15 @@ This is the code for the Method 2R Madness robot for the 2023-24 Centerstage sea
 
 ## Code Description
 
-**ACustom.java**Generic Autonomous OpMode setup for setting autonomous starting parameters.
+**ACustom.java**: Generic Autonomous OpMode setup for setting autonomous starting parameters.
 
-**ACustomHigh.java**Autonomous OpMode setup to drop pixels on backboard from a higher height.
+**ACustomHigh.java**: Autonomous OpMode setup to drop pixels on backboard from a higher height.
 
-**RobotHardware.java**Hardware abstraction class.
+**RobotHardware.java**: Hardware abstraction class.
 
-**TeleopCode.java**Teleop OpMode.
+**TeleopCode.java**: Teleop OpMode.
 
-**TestSensor.java**OpMode that reports some sensor information.
+**TestSensor.java**: OpMode that reports some sensor information.
 
 ## To reset robot for play:
 
